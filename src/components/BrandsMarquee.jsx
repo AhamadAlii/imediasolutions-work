@@ -1,60 +1,101 @@
 'use client';
 
-import React from 'react';
-import { Palette, Sparkles, Rocket, Smartphone, Code2, Globe, Cpu, Zap } from 'lucide-react';
+import React, { useMemo } from 'react';
 
-const brands = [
-    { name: 'LOWE\'S', icon: <Globe className="w-8 h-8" /> },
-    { name: 'Cognizant', icon: <Cpu className="w-8 h-8" /> },
-    { name: 'Trimble', icon: <Zap className="w-8 h-8" /> },
-    { name: 'e2open', icon: <Globe className="w-8 h-8" /> },
-    { name: 'TOYOTA', icon: <Cpu className="w-8 h-8" /> },
-    { name: 'OWASP', icon: <Globe className="w-8 h-8" /> },
-    { name: 'Injazat', icon: <Zap className="w-8 h-8" /> },
-];
+const brands = ['Trimble', 'e2open', 'TOYOTA', 'OWASP', 'Injazat', "LOWE'S", 'Cognizant'];
+const arcLift = [-10, -26, -40, -48, -40, -26, -10];
 
 const BrandsMarquee = () => {
+    const looped = useMemo(() => [...brands, ...brands], []);
+
     return (
-        <section className="bg-black py-40 overflow-hidden relative">
-            <div className="max-w-7xl mx-auto text-center mb-24 cursor-default">
-                <h2 className="text-4xl font-bold text-white mb-4">Trusted by Industry Leaders</h2>
-                <p className="text-gray-500 text-sm font-light uppercase tracking-widest">
+        <section className="bg-black py-28 md:py-36 overflow-hidden relative">
+            <div className="max-w-7xl mx-auto text-center mb-14 md:mb-18 cursor-default px-6">
+                <h2 className="text-4xl md:text-6xl font-bold text-white mb-3">Trusted by Industry Leaders</h2>
+                <p className="text-white/80 text-base md:text-2xl font-light">
                     Powering Innovation for Companies Worldwide
                 </p>
             </div>
 
-            {/* CURVED MARQUEE CONTAINER */}
-            <div className="relative w-full overflow-hidden">
-                <div className="marquee-curve absolute inset-0 z-10 pointer-events-none"
-                    style={{
-                        background: 'radial-gradient(circle at 50% 100%, transparent 60%, black 100%)',
-                        transform: 'scaleY(0.4) translateY(50%)'
-                    }}
-                />
+            <div className="arc-stage">
+                <div className="arc-glow pointer-events-none" />
 
-                <div className="flex animate-marquee whitespace-nowrap gap-20 items-center py-12">
-                    {[...brands, ...brands, ...brands].map((brand, i) => (
-                        <div key={i} className="flex items-center gap-6 opacity-40 hover:opacity-100 transition-opacity duration-500 group">
-                            <div className="text-gray-400 group-hover:text-indigo-400 transition-colors">
-                                {brand.icon}
-                            </div>
-                            <span className="text-3xl font-bold text-white tracking-tighter uppercase whitespace-nowrap">
-                                {brand.name}
-                            </span>
-                        </div>
+                <div className="arc-track">
+                    {looped.map((name, i) => (
+                        <span
+                            key={`${name}-${i}`}
+                            className="arc-item"
+                            style={{ '--lift': `${arcLift[i % brands.length]}px` }}
+                        >
+                            {name}
+                        </span>
                     ))}
                 </div>
             </div>
 
             <style jsx>{`
-                .animate-marquee {
-                    display: flex;
-                    width: max-content;
-                    animation: marquee 40s linear infinite;
+                .arc-stage {
+                    position: relative;
+                    height: 220px;
+                    overflow: hidden;
                 }
-                @keyframes marquee {
+
+                .arc-glow {
+                    position: absolute;
+                    left: 50%;
+                    bottom: 26px;
+                    transform: translateX(-50%);
+                    width: min(86vw, 1120px);
+                    height: 90px;
+                    border-radius: 999px;
+                    background:
+                        radial-gradient(ellipse at center, rgba(162, 172, 255, 0.52) 0%, rgba(45, 60, 185, 0.26) 36%, rgba(0, 0, 0, 0) 74%);
+                    filter: blur(4px);
+                }
+
+                .arc-track {
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    bottom: 36px;
+                    display: flex;
+                    align-items: flex-end;
+                    gap: clamp(56px, 6vw, 100px);
+                    width: max-content;
+                    white-space: nowrap;
+                    animation: arcSlide 24s linear infinite;
+                    padding-left: 32px;
+                }
+
+                .arc-item {
+                    display: inline-block;
+                    transform: translateY(var(--lift));
+                    font-size: clamp(24px, 2.8vw, 42px);
+                    font-weight: 800;
+                    letter-spacing: 0.01em;
+                    color: rgba(255, 255, 255, 0.92);
+                    text-shadow: 0 0 16px rgba(70, 88, 255, 0.24);
+                }
+
+                @keyframes arcSlide {
                     0% { transform: translateX(0); }
-                    100% { transform: translateX(-33.33%); }
+                    100% { transform: translateX(-50%); }
+                }
+
+                @media (max-width: 900px) {
+                    .arc-stage {
+                        height: 180px;
+                    }
+
+                    .arc-track {
+                        bottom: 30px;
+                        gap: 44px;
+                        animation-duration: 20s;
+                    }
+
+                    .arc-item {
+                        font-size: clamp(16px, 5vw, 26px);
+                    }
                 }
             `}</style>
         </section>

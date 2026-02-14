@@ -5,7 +5,12 @@ import { ArrowRight } from 'lucide-react';
 
 const CTASection = () => {
     const containerRef = useRef(null);
+    const bottomLineRef = useRef(null);
     const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+    const [waveIndex, setWaveIndex] = useState(0);
+    const [hoverWave, setHoverWave] = useState(-1);
+    const topWords = ['We', 'turn', 'bold', 'ideas', 'into'];
+    const bottomWords = ['powerful', 'digital', 'realities.'];
 
     const handleMouseMove = (e) => {
         if (!containerRef.current) return;
@@ -14,6 +19,24 @@ const CTASection = () => {
         const y = ((e.clientY - rect.top) / rect.height) * 100;
         setMousePos({ x, y });
     };
+
+    useEffect(() => {
+        const id = setInterval(() => {
+            setWaveIndex((prev) => (prev + 1) % bottomWords.length);
+        }, 1500);
+        return () => clearInterval(id);
+    }, [bottomWords.length]);
+
+    const handleBottomHover = (e) => {
+        if (!bottomLineRef.current) return;
+        const rect = bottomLineRef.current.getBoundingClientRect();
+        const relX = (e.clientX - rect.left) / rect.width;
+        const idx = Math.min(bottomWords.length - 1, Math.max(0, Math.floor(relX * bottomWords.length)));
+        setHoverWave(idx);
+    };
+
+    const mouseX = (mousePos.x - 50) / 50;
+    const mouseY = (mousePos.y - 50) / 50;
 
     return (
         <section
@@ -39,17 +62,88 @@ const CTASection = () => {
                 />
 
                 <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-white mb-16 leading-[1.1] max-w-4xl px-8">
-                    We turn bold ideas into <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-indigo-100 italic">powerful digital realities.</span>
+                    <span className="block">
+                        {topWords.map((word, index) => (
+                            <span
+                                key={word}
+                                className="fluid-word"
+                                style={{
+                                    transform: `translate3d(${mouseX * (index + 1) * 1.6}px, ${mouseY * (index + 1) * 0.9}px, 0)`
+                                }}
+                            >
+                                {word}
+                            </span>
+                        ))}
+                    </span>
+                    <span
+                        ref={bottomLineRef}
+                        onMouseMove={handleBottomHover}
+                        onMouseLeave={() => setHoverWave(-1)}
+                        className="mt-2 block italic"
+                    >
+                        {bottomWords.map((word, index) => (
+                            <span
+                                key={word}
+                                className={`wave-word ${waveIndex === index || hoverWave === index ? 'wave-active' : ''}`}
+                            >
+                                {word}
+                            </span>
+                        ))}
+                    </span>
                 </h2>
 
                 <button className="group/btn relative px-10 py-5 bg-[#4B4EBD] text-white rounded-full font-bold text-xs tracking-widest overflow-hidden transition-all hover:scale-105 hover:bg-[#5C5FED]">
                     <span className="relative z-10 flex items-center gap-3">
-                        LET'S WORK TOGETHER <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                        LET&apos;S WORK TOGETHER <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                     </span>
                     <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
                 </button>
             </div>
+
+            <style jsx>{`
+                .fluid-word {
+                    display: inline-block;
+                    margin-right: 0.42em;
+                    transition: transform 180ms ease-out;
+                    will-change: transform;
+                }
+
+                .wave-word {
+                    display: inline-block;
+                    margin-right: 0.38em;
+                    opacity: 0.95;
+                    transform: translateY(0px) scale(1);
+                    color: #a7b6ff;
+                    text-shadow: 0 0 10px rgba(120, 142, 255, 0.35);
+                }
+
+                .wave-active {
+                    animation: fluidPulse 680ms cubic-bezier(0.22, 1, 0.36, 1);
+                }
+
+                @keyframes fluidPulse {
+                    0% {
+                        transform: translateY(0px) scale(1);
+                        filter: blur(0px);
+                        opacity: 0.9;
+                    }
+                    35% {
+                        transform: translateY(-7px) scale(1.05);
+                        filter: blur(0.6px);
+                        opacity: 1;
+                    }
+                    70% {
+                        transform: translateY(2px) scale(0.98);
+                        filter: blur(0px);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: translateY(0px) scale(1);
+                        filter: blur(0px);
+                        opacity: 0.9;
+                    }
+                }
+            `}</style>
         </section>
     );
 };

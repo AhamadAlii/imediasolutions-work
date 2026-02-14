@@ -15,15 +15,18 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
   const [activeService, setActiveService] = useState('hero');
+  const [hideNavbar, setHideNavbar] = useState(false);
   const [heroHidden, setHeroHidden] = useState(false);
   const heroContentRef = useRef(null);
   const particleShiftRef = useRef({ x: 0 });
 
   useEffect(() => {
     if (!heroContentRef.current) return;
+    const animations = [];
+    const triggers = [];
 
     // 1. Hero Content Fade & Scale
-    gsap.to(heroContentRef.current, {
+    animations.push(gsap.to(heroContentRef.current, {
       opacity: 0,
       y: -150,
       scale: 0.9,
@@ -40,10 +43,10 @@ export default function Home() {
           setActiveService('hero');
         },
       }
-    });
+    }));
 
     // 2. Particle Shift Animation (Move to left stage as we approach Services)
-    gsap.to(particleShiftRef.current, {
+    animations.push(gsap.to(particleShiftRef.current, {
       x: 1,
       ease: 'power2.inOut',
       scrollTrigger: {
@@ -52,40 +55,56 @@ export default function Home() {
         end: 'bottom bottom',
         scrub: 1,
       }
-    });
+    }));
 
     // 3. Hero Reset Logic
-    ScrollTrigger.create({
+    triggers.push(ScrollTrigger.create({
       trigger: '#services-trigger',
       start: 'top 20%',
       onEnterBack: () => {
         setActiveService('hero');
         particleShiftRef.current.x = 0;
       },
-    });
+    }));
 
     // 4. Robust Section Top Fallback
-    ScrollTrigger.create({
+    triggers.push(ScrollTrigger.create({
       trigger: '#services-section',
       start: 'top bottom',
       onEnter: () => setActiveService('video'),
       onEnterBack: () => setActiveService('video'),
-    });
+    }));
+
+    // 4b. Hide navbar only while services section is in view.
+    triggers.push(ScrollTrigger.create({
+      trigger: '#services-section',
+      start: 'top top',
+      end: 'bottom top',
+      onEnter: () => setHideNavbar(true),
+      onLeave: () => setHideNavbar(false),
+      onEnterBack: () => setHideNavbar(true),
+      onLeaveBack: () => setHideNavbar(false),
+    }));
 
     // 5. Global Top Reset
-    ScrollTrigger.create({
+    triggers.push(ScrollTrigger.create({
       trigger: 'body',
       start: 'top top',
       onEnterBack: () => {
         setActiveService('hero');
         particleShiftRef.current.x = 0;
       }
-    });
+    }));
+
+    return () => {
+      animations.forEach((animation) => animation.kill());
+      triggers.forEach((trigger) => trigger.kill());
+    };
   }, []);
 
   return (
-    <main className="relative min-h-screen bg-[#050510] text-white">
-      <Navbar />
+    <main className="relative min-h-screen bg-black text-white">
+      <Navbar hidden={hideNavbar} />
 
       {/* Background Particles Stage */}
       <div
@@ -94,15 +113,26 @@ export default function Home() {
           clipPath: activeService === 'hero' ? 'inset(0 0 0 0)' : 'inset(0 60% 0 0)'
         }}
       >
-        <ParticleScene activeService={activeService} particleShift={particleShiftRef.current.x} />
+        <ParticleScene activeService={activeService} particleShift={particleShiftRef} />
       </div>
 
       {/* Hero Section */}
       <section
-        className={`relative z-[60] flex min-h-screen flex-col items-center justify-center px-6 pt-20 text-center transition-all duration-1000 ease-in-out ${heroHidden ? 'pointer-events-none opacity-0 invisible' : 'opacity-100'}`}
+        className={`relative z-[60] flex min-h-screen items-center px-6 pt-20 transition-all duration-1000 ease-in-out ${heroHidden ? 'pointer-events-none opacity-0 invisible' : 'opacity-100'}`}
       >
-        <div ref={heroContentRef} className="max-w-6xl">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-indigo-300 text-[10px] font-medium tracking-widest uppercase mb-12">
+        <div ref={heroContentRef} className="w-full max-w-7xl mx-auto">
+          <div className="max-w-[640px]">
+          <h1
+            className="mb-8 mt-10 md:mt-16 font-bold tracking-tighter text-white leading-[0.92]"
+            style={{ textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+          >
+            <span className="block text-[54px] sm:text-7xl md:text-8xl whitespace-nowrap">
+              <span className="hero-eye-word">EYE</span>{' '}
+              <span className="hero-media-word text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500 italic">MEDIA</span>
+            </span>
+          </h1>
+
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-indigo-300 text-[10px] font-medium tracking-widest uppercase mb-8">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
@@ -110,22 +140,14 @@ export default function Home() {
             Innovation Driven Studio
           </div>
 
-          <h1
-            className="text-5xl md:text-8xl font-bold tracking-tighter text-white mb-8 leading-[0.9]"
-            style={{ textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
-          >
-            EYE<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500 italic">MEDIA</span>
-          </h1>
-
           <p
-            className="max-w-2xl mx-auto text-gray-200 text-lg md:text-xl font-normal mb-12 leading-relaxed"
+            className="max-w-[620px] text-gray-200 text-lg md:text-xl font-normal mb-12 leading-relaxed"
             style={{ textShadow: '0 4px 20px rgba(0,0,0,0.6)' }}
           >
             Eyemedia crafts high-fidelity digital experiences that bridge the gap between imagination and execution.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
             <button className="group relative px-8 py-4 bg-white text-black rounded-full font-bold text-xs tracking-widest hover:bg-indigo-50 transition-all duration-300">
               EXPLORE OUR WORK
             </button>
@@ -133,20 +155,6 @@ export default function Home() {
               VIEW SERVICES
             </button>
           </div>
-
-          <div className="grid grid-cols-3 gap-12 mt-24 border-t border-white/5 pt-12">
-            <div>
-              <div className="text-3xl font-bold text-white mb-1">100+</div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-widest">Global Clients</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-white mb-1">15+</div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-widest">Awards Won</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-white mb-1">05+</div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-widest">Years Experience</div>
-            </div>
           </div>
         </div>
       </section>

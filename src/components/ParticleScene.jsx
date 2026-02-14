@@ -14,6 +14,7 @@ uniform float uExpansion;
 uniform vec2 uMouse;
 uniform float uPixelRatio;
 uniform float uSize;
+uniform float uHueShift;
 
 attribute vec3 positionStart;
 attribute vec3 positionTarget;
@@ -44,25 +45,27 @@ void main() {
 
     vec4 modelPosition = modelMatrix * vec4(mixedPosition, 1.0);
     float mouseDist = distance(modelPosition.xy, uMouse);
-    float radius = 1.8;
+    float radius = 1.25;
     if(mouseDist < radius) {
         vec3 repulsionDir = normalize(modelPosition.xyz - vec3(uMouse, 0.0));
-        float force = pow((radius - mouseDist) / radius, 4.0);
-        modelPosition.xyz += repulsionDir * force * 1.8;
+        float force = pow((radius - mouseDist) / radius, 2.2);
+        modelPosition.xyz += repulsionDir * force * 0.48;
     }
 
     vec4 viewPosition = viewMatrix * modelPosition;
     gl_Position = projectionMatrix * viewPosition;
 
-    float sparkle = 0.8 + sin(uTime * 4.0 + aSize * 20.0) * 0.5;
-    float corePulse = 1.0 + vIsCore * sin(uTime * 5.0) * 0.2;
+    float sparkle = 0.92 + sin(uTime * 3.0 + aSize * 16.0) * 0.14;
+    float corePulse = 1.0 + vIsCore * sin(uTime * 3.5) * 0.08;
     gl_PointSize = uSize * aSize * uPixelRatio * sparkle * corePulse;
     gl_PointSize *= (1.0 / - viewPosition.z);
 
-    vec3 purple = vec3(0.66, 0.33, 0.97);
-    vec3 cyan = vec3(0.13, 0.83, 0.93);
-    vColor = mix(purple, cyan, (mixedPosition.y * 0.5) + 0.5); // Wider gradient interact
-    vColor += vIsCore * 0.4; // Brighter core
+    vec3 darkBlue = vec3(0.18, 0.36, 0.78);
+    vec3 deepBlue = vec3(0.12, 0.24, 0.58);
+    float tint = 0.5 + 0.5 * sin((mixedPosition.y * 0.7) + uTime * 0.25);
+    vColor = mix(deepBlue, darkBlue, tint);
+    vColor = min(vColor * 1.55, vec3(1.0));
+    vColor += vIsCore * 0.18;
     vAlpha = smoothstep(12.0, 0.0, -viewPosition.z);
 }
 `;
@@ -75,25 +78,27 @@ varying float vIsCore;
 void main() {
     vec2 center = gl_PointCoord - 0.5;
     float dist = length(center);
-    if (dist > 0.5) discard;
+    if (dist > 0.88) discard;
 
-    float glow = 1.0 - (dist * 2.0);
-    glow = pow(glow, 3.0); // Restored "Neon" soft falloff
+    float core = smoothstep(0.5, 0.0, dist);
+    float innerGlow = pow(core, 2.4);
+    float halo = smoothstep(0.75, 0.2, dist);
+    float colorShadow = pow(halo, 2.0);
+    float outerShadow = smoothstep(0.88, 0.55, dist);
 
     float flicker = 1.0;
     if (vIsCore < 0.5) {
         flicker = 0.85 + sin(vAlpha * 100.0) * 0.15; // More prominent twinkle
     }
 
-    gl_FragColor = vec4(vColor, vAlpha * glow * 1.5 * flicker);
+    vec3 finalColor = vColor * (innerGlow * 1.3 + colorShadow * 0.9 + outerShadow * 0.42);
+    float finalAlpha = vAlpha * (innerGlow * 2.1 + colorShadow * 1.2 + outerShadow * 0.7) * flicker;
+    gl_FragColor = vec4(finalColor, finalAlpha);
 }
 `;
 
-const PARTICLE_COUNT = 25000;
-
-const HeroCrystals = ({ activeService }) => {
+const HeroCrystals = ({ activeService, count = 12 }) => {
     const meshRef = useRef();
-    const count = 15;
     const dummy = useMemo(() => new THREE.Object3D(), []);
 
     const positions = useMemo(() => {
@@ -106,7 +111,7 @@ const HeroCrystals = ({ activeService }) => {
             pos.push({ orbit, t, a, b, phase: Math.random() * Math.PI * 2, speed: 0.15 + Math.random() * 0.1 });
         }
         return pos;
-    }, []);
+    }, [count]);
 
     useFrame((state) => {
         if (activeService !== 'hero') {
@@ -145,22 +150,21 @@ const HeroCrystals = ({ activeService }) => {
             <dodecahedronGeometry args={[1, 0]} />
             <meshPhysicalMaterial
                 transparent
-                opacity={0.3}
+                opacity={0.28}
                 transmission={0.95}
                 thickness={0.5}
                 roughness={0.05}
                 metalness={0.9}
-                emissive="#22D3EE"
-                emissiveIntensity={1.5}
-                color="#A855F7"
+                emissive="#2A5AC3"
+                emissiveIntensity={1.05}
+                color="#3A74DD"
             />
         </instancedMesh>
     );
 };
 
-const CircuitBackground = () => {
+const CircuitBackground = ({ count = 1200 }) => {
     const meshRef = useRef();
-    const count = 2000;
 
     const positions = useMemo(() => {
         const pos = new Float32Array(count * 3);
@@ -183,7 +187,7 @@ const CircuitBackground = () => {
             }
         }
         return { pos, types };
-    }, []);
+    }, [count]);
 
     useFrame((state) => {
         if (meshRef.current) {
@@ -213,8 +217,8 @@ const CircuitBackground = () => {
         fragment: `
             varying float vGlow;
             void main() {
-                vec3 circuitColor = mix(vec3(0.1, 0.1, 0.3), vec3(0.13, 0.83, 0.93), vGlow);
-                gl_FragColor = vec4(circuitColor, (0.05 + vGlow * 0.3));
+                vec3 circuitColor = mix(vec3(0.0, 0.0, 0.0), vec3(0.10, 0.23, 0.56), vGlow);
+                gl_FragColor = vec4(circuitColor, (0.02 + vGlow * 0.24));
             }
         `
     }), []);
@@ -237,62 +241,121 @@ const CircuitBackground = () => {
     );
 };
 
-const Particles = ({ activeService, particleShift }) => {
+const Particles = ({ activeService, particleShiftRef, particleCount, perfTier }) => {
     const meshRef = useRef();
+    const currentShapeRef = useRef(null);
+    const morphTweenRef = useRef(null);
+    const pointerRef = useRef({ x: 0, y: 0 });
     const { viewport } = useThree();
-    const { positions, sizes, getShapePositions } = useParticleMorph(PARTICLE_COUNT);
+    const { positions, sizes, getShapePositions } = useParticleMorph(particleCount);
+    const scrollProgressRef = useRef(0);
 
     const uniforms = useMemo(() => ({
         uTime: { value: 0 },
         uProgress: { value: 0 },
         uExpansion: { value: 0 },
         uMouse: { value: new THREE.Vector2(0, 0) },
-        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
-        uSize: { value: 12 } // Restored size for neon impact (was 8)
-    }), []);
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, perfTier === 'high' ? 1.25 : 1) },
+        uSize: { value: perfTier === 'high' ? 6.6 : 5.8 },
+        uHueShift: { value: 0 }
+    }), [perfTier]);
+
+    useEffect(() => {
+        const updateScroll = () => {
+            scrollProgressRef.current = window.scrollY / window.innerHeight;
+        };
+
+        updateScroll();
+        window.addEventListener('scroll', updateScroll, { passive: true });
+        return () => window.removeEventListener('scroll', updateScroll);
+    }, []);
+
+    useEffect(() => {
+        const updatePointer = (event) => {
+            pointerRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+            pointerRef.current.y = -((event.clientY / window.innerHeight) * 2 - 1);
+        };
+
+        window.addEventListener('pointermove', updatePointer, { passive: true });
+        return () => window.removeEventListener('pointermove', updatePointer);
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (morphTweenRef.current) morphTweenRef.current.kill();
+        };
+    }, []);
 
     useEffect(() => {
         if (!meshRef.current) return;
         const geometry = meshRef.current.geometry;
         const targetPos = getShapePositions(activeService);
+        const attrLength = particleCount * 3;
 
         let startAttr = geometry.getAttribute('positionStart');
         let targetAttr = geometry.getAttribute('positionTarget');
 
-        if (!startAttr || startAttr.array.length !== PARTICLE_COUNT * 3) {
-            geometry.setAttribute('positionStart', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT * 3), 3));
+        if (!startAttr || startAttr.array.length !== attrLength) {
+            geometry.setAttribute('positionStart', new THREE.BufferAttribute(new Float32Array(attrLength), 3));
             startAttr = geometry.getAttribute('positionStart');
         }
-        if (!targetAttr || targetAttr.array.length !== PARTICLE_COUNT * 3) {
-            geometry.setAttribute('positionTarget', new THREE.BufferAttribute(new Float32Array(PARTICLE_COUNT * 3), 3));
+        if (!targetAttr || targetAttr.array.length !== attrLength) {
+            geometry.setAttribute('positionTarget', new THREE.BufferAttribute(new Float32Array(attrLength), 3));
             targetAttr = geometry.getAttribute('positionTarget');
-            targetAttr.set(targetPos);
-            targetAttr.needsUpdate = true;
         }
 
-        if (startAttr.array.length === targetAttr.array.length) {
-            startAttr.array.set(targetAttr.array);
-            startAttr.needsUpdate = true;
-        }
-        if (targetAttr.array.length === targetPos.length) {
-            targetAttr.set(targetPos);
-            targetAttr.needsUpdate = true;
+        // Capture the exact currently visible shape before starting a new morph.
+        let fromShape = currentShapeRef.current;
+        const progress = uniforms.uProgress.value;
+        if (progress > 0 && progress < 1 && targetAttr.array.length === startAttr.array.length) {
+            fromShape = new Float32Array(attrLength);
+            for (let i = 0; i < attrLength; i++) {
+                startAttr.array[i] = startAttr.array[i] * (1 - progress) + targetAttr.array[i] * progress;
+                fromShape[i] = startAttr.array[i];
+            }
         }
 
+        if (!fromShape || fromShape.length !== attrLength) {
+            fromShape = positions.slice(0);
+        }
+
+        startAttr.array.set(fromShape);
+        startAttr.needsUpdate = true;
+
+        targetAttr.array.set(targetPos);
+        targetAttr.needsUpdate = true;
+        currentShapeRef.current = fromShape;
+
+        if (morphTweenRef.current) morphTweenRef.current.kill();
         uniforms.uProgress.value = 0;
-        gsap.to(uniforms.uProgress, {
+        morphTweenRef.current = gsap.to(uniforms.uProgress, {
             value: 1,
-            duration: 1.2,
+            duration: 1.15,
             ease: 'power2.inOut',
-            overwrite: true
+            overwrite: true,
+            onComplete: () => {
+                currentShapeRef.current = targetPos.slice(0);
+            }
         });
-    }, [activeService, getShapePositions, uniforms]);
+    }, [activeService, getShapePositions, particleCount, positions, uniforms]);
 
     useFrame((state) => {
-        const { clock, mouse } = state;
+        const { clock } = state;
         uniforms.uTime.value = clock.getElapsedTime();
+        const hueMap = {
+            hero: 0.02,
+            video: 0.12,
+            ai: 0.22,
+            influencer: 0.34,
+            event: 0.45,
+            web: 0.58,
+            social: 0.7,
+            app: 0.84
+        };
+        const targetHue = hueMap[activeService] ?? 0;
+        uniforms.uHueShift.value = THREE.MathUtils.lerp(uniforms.uHueShift.value, targetHue, 0.08);
 
-        const scroll = window.scrollY / window.innerHeight;
+        const scroll = scrollProgressRef.current;
         if (activeService === 'hero') {
             uniforms.uExpansion.value = THREE.MathUtils.lerp(uniforms.uExpansion.value, Math.min(scroll * 1.5, 1.0), 0.1);
         } else {
@@ -300,21 +363,38 @@ const Particles = ({ activeService, particleShift }) => {
         }
 
         if (meshRef.current) {
-            const targetX = -viewport.width * 0.3 * particleShift;
+            const shiftAmount = particleShiftRef.current.x;
+            const heroBiasX = activeService === 'hero' ? viewport.width * 0.24 : 0;
+            const targetX = heroBiasX - viewport.width * 0.3 * shiftAmount;
             meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
-            const targetY = -(viewport.height * 0.125) * particleShift;
+            const targetY = -(viewport.height * 0.125) * shiftAmount;
             meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
+
+            if (activeService === 'hero') {
+                const pulse = 1 + Math.sin(clock.getElapsedTime() * 1.2) * 0.018;
+                meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, pulse, 0.08);
+                meshRef.current.scale.y = THREE.MathUtils.lerp(meshRef.current.scale.y, 1 / pulse, 0.08);
+                meshRef.current.rotation.z = THREE.MathUtils.lerp(
+                    meshRef.current.rotation.z,
+                    Math.sin(clock.getElapsedTime() * 0.65) * 0.02,
+                    0.08
+                );
+            } else {
+                meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, 1, 0.1);
+                meshRef.current.scale.y = THREE.MathUtils.lerp(meshRef.current.scale.y, 1, 0.1);
+                meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.1);
+            }
         }
 
-        uniforms.uMouse.value.x = (mouse.x * viewport.width) / 2;
-        uniforms.uMouse.value.y = (mouse.y * viewport.height) / 2;
+        uniforms.uMouse.value.x = (pointerRef.current.x * viewport.width) / 2;
+        uniforms.uMouse.value.y = (pointerRef.current.y * viewport.height) / 2;
     });
 
     return (
         <points ref={meshRef}>
             <bufferGeometry>
-                <bufferAttribute attach="attributes-position" count={PARTICLE_COUNT} array={positions} itemSize={3} />
-                <bufferAttribute attach="attributes-aSize" count={PARTICLE_COUNT} array={sizes} itemSize={1} />
+                <bufferAttribute attach="attributes-position" count={particleCount} array={positions} itemSize={3} />
+                <bufferAttribute attach="attributes-aSize" count={particleCount} array={sizes} itemSize={1} />
             </bufferGeometry>
             <shaderMaterial
                 blending={THREE.AdditiveBlending}
@@ -328,9 +408,8 @@ const Particles = ({ activeService, particleShift }) => {
     );
 };
 
-const BackgroundGalaxy = () => {
+const BackgroundGalaxy = ({ count = 1200 }) => {
     const meshRef = useRef();
-    const count = 2000;
     const positions = useMemo(() => {
         const pos = new Float32Array(count * 3);
         for (let i = 0; i < count; i++) {
@@ -342,7 +421,7 @@ const BackgroundGalaxy = () => {
             pos[i * 3 + 2] = r * Math.cos(phi);
         }
         return pos;
-    }, []);
+    }, [count]);
 
     useFrame((state) => {
         if (meshRef.current) {
@@ -356,45 +435,81 @@ const BackgroundGalaxy = () => {
             <bufferGeometry>
                 <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
             </bufferGeometry>
-            <pointsMaterial size={0.05} color="#444466" transparent opacity={0.3} sizeAttenuation={true} />
+            <pointsMaterial size={0.05} color="#0B0D12" transparent opacity={0.12} sizeAttenuation={true} />
         </points>
     );
 };
 
 const CameraRig = () => {
-    const { camera, mouse } = useThree();
-    const vec = new THREE.Vector3();
+    const { camera } = useThree();
+    const target = useMemo(() => new THREE.Vector3(0, 0, 4), []);
 
     useFrame(() => {
-        camera.position.lerp(vec.set(mouse.x * 0.4, mouse.y * 0.4, 4), 0.05); // Slightly less sensitive
+        camera.position.lerp(target, 0.12);
         camera.lookAt(0, 0, 0);
     });
     return null;
 };
 
 const ParticleScene = ({ activeService, particleShift }) => {
+    const perfTier = useMemo(() => {
+        if (typeof window === 'undefined') return 'medium';
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const cores = navigator.hardwareConcurrency || 4;
+        const memory = navigator.deviceMemory || 4;
+        const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+        if (reducedMotion || isMobile || cores <= 4 || memory <= 4) {
+            return 'low';
+        }
+
+        if (cores <= 8 || memory <= 8) {
+            return 'medium';
+        }
+
+        return 'high';
+    }, []);
+
+    const particleCount = perfTier === 'high' ? 10500 : perfTier === 'medium' ? 8000 : 5600;
+    const circuitCount = perfTier === 'high' ? 1200 : 800;
+    const galaxyCount = perfTier === 'high' ? 1000 : 700;
+    const crystalCount = perfTier === 'high' ? 12 : 8;
+
     return (
         <div className="fixed inset-0 z-0 pointer-events-none">
-            <Canvas camera={{ position: [0, 0, 4], fov: 75 }} gl={{ antialias: false, alpha: true }} dpr={[1, 2]}>
+            <Canvas
+                camera={{ position: [0, 0, 4], fov: 75 }}
+                gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
+                dpr={perfTier === 'high' ? [1, 1.25] : [1, 1]}
+            >
                 <CameraRig />
-                <BackgroundGalaxy />
-                <CircuitBackground />
-                <HeroCrystals activeService={activeService} />
-                <Particles key={PARTICLE_COUNT} activeService={activeService} particleShift={particleShift} />
+                <BackgroundGalaxy count={galaxyCount} />
+                <CircuitBackground count={circuitCount} />
+                <HeroCrystals activeService={activeService} count={crystalCount} />
+                <Particles
+                    key={particleCount}
+                    activeService={activeService}
+                    particleShiftRef={particleShift}
+                    particleCount={particleCount}
+                    perfTier={perfTier}
+                />
 
-                <EffectComposer>
-                    <Bloom
-                        intensity={0.9} // Restored vibrancy (was 0.6)
-                        luminanceThreshold={0.25}
-                        luminanceSmoothing={0.85}
-                        mipmapBlur
-                    />
-                    <ChromaticAberration offset={[0.0002, 0.0002]} /> // Very subtle
-                    <Vignette eskil={false} offset={0.1} darkness={0.9} />
-                </EffectComposer>
+                {perfTier !== 'low' ? (
+                    <EffectComposer>
+                        <Bloom
+                            intensity={perfTier === 'high' ? 0.96 : 0.74}
+                            luminanceThreshold={0.22}
+                            luminanceSmoothing={0.85}
+                            mipmapBlur
+                        />
+                        <ChromaticAberration offset={[0.00002, 0.00002]} />
+                        <Vignette eskil={false} offset={0.06} darkness={0.28} />
+                    </EffectComposer>
+                ) : null}
             </Canvas>
         </div>
     );
 };
 
 export default ParticleScene;
+

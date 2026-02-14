@@ -78,14 +78,19 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
     const triggerRef = useRef(null);
     const cardsRef = useRef([]);
     const lastActiveRef = useRef(activeId);
+    const leftPaneWidth = 'clamp(280px, 38vw, 520px)';
+    const horizontalGutter = '2.5rem';
 
     useEffect(() => {
         const totalCards = services.length;
+        const triggerEl = triggerRef.current;
+        const sectionEl = sectionRef.current;
+        if (!triggerEl || !sectionEl) return;
 
         // 1. PINNING & PROGRESS
-        const pin = gsap.to(sectionRef.current, {
+        const pin = gsap.to(sectionEl, {
             x: () => {
-                const track = sectionRef.current;
+                const track = sectionEl;
                 const cards = cardsRef.current;
                 if (!track || cards.length === 0) return 0;
 
@@ -97,24 +102,25 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
             },
             ease: 'none',
             scrollTrigger: {
-                trigger: triggerRef.current,
+                trigger: triggerEl,
                 start: 'top top',
-                end: () => `+=${window.innerHeight * totalCards * 2}`, // Refined duration
-                scrub: 0.5,
+                end: () => `+=${window.innerHeight * (totalCards - 1) * 1.25}`,
+                scrub: 0.35,
                 pin: true,
+                anticipatePin: 1,
                 snap: {
                     snapTo: 1 / (totalCards - 1),
-                    duration: { min: 0.2, max: 0.8 },
-                    delay: 0.05,
-                    ease: 'power1.inOut'
+                    duration: { min: 0.12, max: 0.28 },
+                    delay: 0.01,
+                    ease: 'power2.out',
+                    inertia: false,
+                    directional: true
                 },
                 onUpdate: (self) => {
                     const progress = self.progress;
-                    const totalServices = services.length;
-
                     const index = Math.min(
-                        Math.floor(progress * totalServices),
-                        totalServices - 1
+                        Math.round(progress * (totalCards - 1)),
+                        totalCards - 1
                     );
 
                     const currentId = services[index].id;
@@ -128,34 +134,10 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
             },
         });
 
-        // 2. INDIVIDUAL CARD ANIMATIONS
-        services.forEach((_, i) => {
-            const card = cardsRef.current[i];
-            if (!card) return;
-
-            const cardStart = (i / (totalCards - 1));
-            // Card stays visible much longer to show blue state
-            const cardEnd = ((i + 0.8) / (totalCards - 1));
-
-            gsap.to(card, {
-                opacity: 0,
-                xPercent: -150,
-                filter: 'blur(30px)',
-                scale: 0.9,
-                ease: 'power2.in',
-                scrollTrigger: {
-                    trigger: triggerRef.current,
-                    start: () => `top+=${cardStart * window.innerHeight * totalCards * 2.5 + window.innerHeight * 1.0} top`,
-                    end: () => `top+=${cardEnd * window.innerHeight * totalCards * 2.5 + window.innerHeight * 1.0} top`,
-                    scrub: true,
-                }
-            });
-        });
-
         return () => {
             pin.kill();
             ScrollTrigger.getAll().forEach(st => {
-                if (st.vars.trigger === triggerRef.current) st.kill();
+                if (st.vars.trigger === triggerEl) st.kill();
             });
         };
     }, [onServiceChange]);
@@ -167,14 +149,23 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                 {/* CONTENT ZONE (Entire section height) */}
                 <div className="h-full w-full relative flex items-center">
                     {/* THE MASK (Box) - Left column inside content zone - COMPLETELY BLACK */}
-                    <div className="absolute top-0 left-0 h-full w-[40vw] bg-black z-[100] border-r border-white/5 shadow-[30px_0_120px_rgba(0,0,0,1)]">
+                    <div
+                        className="absolute top-0 left-0 h-full bg-black z-[100] border-r border-white/5 shadow-[30px_0_120px_rgba(0,0,0,1)]"
+                        style={{ width: leftPaneWidth }}
+                    >
                         {/* 3D Shape rendered here */}
                     </div>
 
                     {/* FIXED HEADER ROW (Stays fixed while track slides) */}
-                    <div className="absolute top-[5vh] left-[calc(40vw+4cm)] z-[110] flex justify-between w-[calc(60vw-4cm-10vw)] items-end pb-12 border-b border-white/5 whitespace-nowrap">
+                    <div
+                        className="absolute top-[9vh] z-[110] flex justify-between items-end pb-8 border-b border-white/5 whitespace-nowrap"
+                        style={{
+                            left: `calc(${leftPaneWidth} + ${horizontalGutter})`,
+                            width: `calc(100vw - ${leftPaneWidth} - (${horizontalGutter} * 2))`
+                        }}
+                    >
                         <h2 className="text-5xl font-bold tracking-tighter text-white">Our Services</h2>
-                        <p className="max-w-[340px] text-xs text-gray-400 font-light leading-relaxed whitespace-normal pr-12">
+                        <p className="max-w-[340px] text-xs text-gray-400 font-light leading-relaxed whitespace-normal pr-4">
                             We offer comprehensive digital solutions that transform your business and drive innovation across every touchpoint.
                         </p>
                     </div>
@@ -182,8 +173,8 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                     {/* THE TRACK (Cards) */}
                     <div
                         ref={sectionRef}
-                        className="flex flex-nowrap h-full items-center pr-[20vw] z-[70] pt-[25vh]"
-                        style={{ paddingLeft: 'calc(40vw + 4cm)' }}
+                        className="flex flex-nowrap h-full items-center pr-[10vw] z-[70] pt-[24vh]"
+                        style={{ paddingLeft: `calc(${leftPaneWidth} + ${horizontalGutter})` }}
                     >
                         {services.map((service, index) => {
                             const isActive = activeId === service.id;
@@ -191,10 +182,10 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                                 <div
                                     key={service.id}
                                     ref={el => cardsRef.current[index] = el}
-                                    className={`service-card h-[520px] w-[360px] shrink-0 rounded-[2.5rem] border p-10 flex flex-col justify-between transition-[background-color,border-color,box-shadow] duration-500 relative overflow-hidden mr-20 will-change-transform ${isActive ? 'bg-[#3A3D91] border-[#3A3D91] shadow-[0_40px_100px_rgba(58,61,145,0.4)] scale-105' : 'bg-[#0A0A0E] border-white/5 backdrop-blur-3xl'}`}
+                                    className={`service-card h-[min(62vh,460px)] w-[min(32vw,360px)] min-w-[320px] shrink-0 rounded-[2.5rem] border p-8 flex flex-col justify-between transition-[background-color,border-color,box-shadow,transform,opacity] duration-350 relative overflow-hidden mr-10 will-change-transform ${isActive ? 'bg-[#3A3D91] border-[#3A3D91] shadow-[0_40px_100px_rgba(58,61,145,0.4)] scale-105 opacity-100' : 'bg-[#0A0A0E] border-white/5 scale-[0.92] opacity-30'}`}
                                 >
                                     {/* Arrow Top Right */}
-                                    <div className="absolute top-10 right-10">
+                                    <div className="absolute top-8 right-8">
                                         <ArrowUpRight className={`w-8 h-8 ${isActive ? 'text-white' : 'text-gray-600'}`} />
                                     </div>
 

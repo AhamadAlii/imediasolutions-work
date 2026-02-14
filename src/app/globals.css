@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050508;
+  --background: #000000;
   --foreground: #ffffff;
 }
 
@@ -10,6 +10,56 @@ body {
   color: var(--foreground);
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.hero-eye-word {
+  display: inline-block;
+  animation: eyePulseFloat 1.2s ease-out 1 both;
+  transform-origin: 50% 55%;
+}
+
+.hero-media-word {
+  display: inline-block;
+  position: relative;
+  animation: mediaSheenSkew 1.4s cubic-bezier(0.22, 1, 0.36, 1) 1 both;
+  will-change: transform, filter;
+}
+
+@keyframes eyePulseFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    letter-spacing: -0.04em;
+    filter: brightness(1);
+  }
+  45% {
+    transform: translateY(-3px) scale(1.03);
+    letter-spacing: -0.028em;
+    filter: brightness(1.18);
+  }
+  70% {
+    transform: translateY(1px) scale(0.995);
+    letter-spacing: -0.037em;
+    filter: brightness(1.05);
+  }
+}
+
+@keyframes mediaSheenSkew {
+  0%, 100% {
+    transform: translateX(0px) skewX(0deg);
+    filter: brightness(1) saturate(1);
+  }
+  35% {
+    transform: translateX(2px) skewX(-5deg);
+    filter: brightness(1.2) saturate(1.06);
+  }
+  60% {
+    transform: translateX(-1px) skewX(3deg);
+    filter: brightness(1.08) saturate(1.02);
+  }
 }
 
 /* Custom Scrollbar */

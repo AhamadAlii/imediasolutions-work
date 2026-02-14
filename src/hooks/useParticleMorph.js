@@ -17,222 +17,242 @@ export const useParticleMorph = (particlesCount = 25000) => {
     const sizes = useMemo(() => {
         const s = new Float32Array(particlesCount);
         for (let i = 0; i < particlesCount; i++) {
-            s[i] = Math.random();
+            s[i] = 0.16 + Math.random() * 0.32;
         }
         return s;
     }, [particlesCount]);
 
     const getShapePositions = useCallback((shapeType) => {
         const pos = new Float32Array(particlesCount * 3);
+        const set = (i, x, y, z = 0) => {
+            pos[i * 3 + 0] = x;
+            pos[i * 3 + 1] = y;
+            pos[i * 3 + 2] = z;
+        };
+        const j = (s) => (Math.random() - 0.5) * s;
 
         switch (shapeType) {
-            case 'video': // Swirling Vortex Only (Removed Play Button Arrow)
+            case 'video':
                 for (let i = 0; i < particlesCount; i++) {
-                    // Swirling Vortex
-                    const angle = i * 0.05 + Math.random() * 0.5;
-                    const r = 0.5 + Math.log(1 + i * 0.0001) * 1.2; // Scaled down to ~1.7 max
-                    pos[i * 3 + 0] = Math.cos(angle) * r;
-                    pos[i * 3 + 1] = Math.sin(angle) * r;
-                    pos[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
-                }
-                break;
-
-            case 'ai': // Head Silhouette + Neural Circuits
-                for (let i = 0; i < particlesCount; i++) {
-                    if (i < particlesCount * 0.7) {
-                        // Head Silhouette distribution
-                        const t = (i / (particlesCount * 0.7)) * Math.PI * 2;
-                        // Parametric head-ish shape
-                        const r = 1.3 + 0.3 * Math.sin(t) * Math.cos(t * 2); // Scale to ~1.6
-                        pos[i * 3 + 0] = Math.cos(t) * r;
-                        pos[i * 3 + 1] = Math.sin(t) * r + 0.1;
-                        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.2;
+                    const p = i / particlesCount;
+                    if (p < 0.42) {
+                        const t = (p / 0.42) * Math.PI * 2;
+                        const w = 1.25;
+                        const h = 0.82;
+                        const r = 0.18;
+                        const x = Math.sign(Math.cos(t)) * (w - r) + r * Math.cos(t) - 0.2;
+                        const y = Math.sign(Math.sin(t)) * (h - r) + r * Math.sin(t);
+                        set(i, x + j(0.04), y + j(0.04), j(0.06));
+                    } else if (p < 0.65) {
+                        const t = ((p - 0.42) / 0.23) * Math.PI * 2;
+                        const r = 0.4 + j(0.05);
+                        set(i, 0.28 + Math.cos(t) * r, Math.sin(t) * r, j(0.08));
                     } else {
-                        // Internal Neural Nodes
-                        pos[i * 3 + 0] = (Math.random() - 0.5) * 1.5;
-                        pos[i * 3 + 1] = (Math.random() - 0.5) * 1.8 + 0.2;
-                        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.4;
-                    }
-                }
-                break;
-
-            case 'influencer': // Network Star Graph
-                for (let i = 0; i < particlesCount; i++) {
-                    if (i < particlesCount * 0.2) {
-                        // Central Node (Sphere)
-                        const phi = Math.acos(-1 + (2 * i) / (particlesCount * 0.2));
-                        const theta = Math.sqrt(particlesCount * 0.2 * Math.PI) * phi;
-                        const r = 0.5; // Scale up central node
-                        pos[i * 3 + 0] = r * Math.cos(theta) * Math.sin(phi);
-                        pos[i * 3 + 1] = r * Math.sin(theta) * Math.sin(phi);
-                        pos[i * 3 + 2] = r * Math.cos(phi);
-                    } else if (i < particlesCount * 0.6) {
-                        // Orbiting Nodes (5 distinct nodes)
-                        const nodeIdx = i % 5;
-                        const angle = (nodeIdx * Math.PI * 2) / 5;
-                        const rNode = 1.6; // Scale down to 1.6
-                        const phi = Math.acos(-1 + (2 * i) / (particlesCount * 0.4));
-                        const theta = Math.sqrt(particlesCount * 0.4 * Math.PI) * phi;
-                        const rSize = 0.2;
-                        pos[i * 3 + 0] = Math.cos(angle) * rNode + rSize * Math.cos(theta) * Math.sin(phi);
-                        pos[i * 3 + 1] = Math.sin(angle) * rNode + rSize * Math.sin(theta) * Math.sin(phi);
-                        pos[i * 3 + 2] = rSize * Math.cos(phi);
-                    } else {
-                        // Connecting Lines (dotted)
-                        const lineIdx = i % 5;
-                        const startAngle = (lineIdx * Math.PI * 2) / 5;
                         const t = Math.random();
-                        pos[i * 3 + 0] = Math.cos(startAngle) * 1.6 * t;
-                        pos[i * 3 + 1] = Math.sin(startAngle) * 1.6 * t;
-                        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.05;
+                        const edge = i % 3;
+                        if (edge === 0) set(i, -0.28 + t * 0.74, -0.4 + t * 0.4, j(0.04));
+                        if (edge === 1) set(i, -0.28 + t * 0.74, 0.4 - t * 0.4, j(0.04));
+                        if (edge === 2) set(i, -0.28 + j(0.03), -0.4 + t * 0.8, j(0.04));
                     }
                 }
                 break;
 
-            case 'event': // Calendar inside Spiral Galaxy
+            case 'ai':
                 for (let i = 0; i < particlesCount; i++) {
-                    if (i < particlesCount * 0.4) {
-                        // Square Calendar Outline
-                        const edge = i % 4;
-                        const t = Math.random() * 2.0 - 1.0;
-                        const s = 1.1; // Scale down calendar
-                        if (edge === 0) { pos[i * 3 + 0] = t * s; pos[i * 3 + 1] = s; }
-                        else if (edge === 1) { pos[i * 3 + 0] = t * s; pos[i * 3 + 1] = -s; }
-                        else if (edge === 2) { pos[i * 3 + 0] = s; pos[i * 3 + 1] = t * s; }
-                        else { pos[i * 3 + 0] = -s; pos[i * 3 + 1] = t * s; }
-                        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.1;
+                    const p = i / particlesCount;
+                    if (p < 0.4) {
+                        const t = (p / 0.4) * Math.PI * 2;
+                        let x = -0.22 + 0.95 * Math.cos(t) + 0.16 * Math.cos(2.2 * t);
+                        const y = 0.03 + 1.08 * Math.sin(t);
+                        if (x > 0.65) x += 0.35 * Math.max(0, Math.cos(t));
+                        set(i, x + j(0.04), y + j(0.04), j(0.06));
+                    } else if (p < 0.72) {
+                        const col = Math.floor(Math.random() * 7);
+                        const row = Math.floor(Math.random() * 8);
+                        const gx = -0.78 + col * 0.24;
+                        const gy = 0.72 - row * 0.22;
+                        set(i, gx + j(0.06), gy + j(0.06), j(0.06));
                     } else {
-                        // Logarithmic Spiral Galaxy
-                        const angle = i * 0.02;
-                        const rBase = 0.4;
-                        const r = rBase * Math.exp(0.2 * (angle % (Math.PI * 4)));
-                        const jitter = Math.random() * 0.4;
-                        const finalR = Math.min(r + jitter, 1.7); // Cap at 1.7
-                        pos[i * 3 + 0] = Math.cos(angle) * finalR;
-                        pos[i * 3 + 1] = Math.sin(angle) * finalR;
-                        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.6;
+                        const t = (p - 0.72) / 0.28;
+                        if (i % 3 === 0) set(i, 1.05 + t * 0.95 + j(0.04), 0.28 - t * 0.56 + j(0.05), j(0.05));
+                        else set(i, 1.95 + j(0.06), -0.2 + Math.random() * 0.4 + j(0.03), j(0.06));
                     }
                 }
                 break;
 
-            case 'web': // Browser Window + Code Lines
+            case 'influencer':
                 for (let i = 0; i < particlesCount; i++) {
-                    if (i < particlesCount * 0.3) {
-                        // Browser Frame
-                        const edge = i % 4;
-                        const t = Math.random() * 2.0 - 1.0;
-                        const sx = 1.7; // Scale down fit box
-                        const sy = 1.1;
-                        if (edge === 0) { pos[i * 3 + 0] = t * sx; pos[i * 3 + 1] = sy; }
-                        else if (edge === 1) { pos[i * 3 + 0] = t * sx; pos[i * 3 + 1] = -sy; }
-                        else if (edge === 2) { pos[i * 3 + 0] = sx; pos[i * 3 + 1] = t * sy; }
-                        else { pos[i * 3 + 0] = -sx; pos[i * 3 + 1] = t * sy; }
-                        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.05;
+                    const p = i / particlesCount;
+                    if (p < 0.18) {
+                        const t = p / 0.18;
+                        const phi = Math.acos(-1 + 2 * t);
+                        const theta = Math.sqrt(particlesCount * Math.PI) * phi;
+                        const r = 0.34;
+                        set(i, r * Math.cos(theta) * Math.sin(phi), r * Math.sin(theta) * Math.sin(phi), r * Math.cos(phi));
+                    } else if (p < 0.48) {
+                        const node = i % 8;
+                        const a = (node / 8) * Math.PI * 2;
+                        const r = 1.45;
+                        const tr = Math.random() * Math.PI * 2;
+                        set(i, Math.cos(a) * r + Math.cos(tr) * 0.14, Math.sin(a) * r + Math.sin(tr) * 0.14, j(0.05));
+                    } else if (p < 0.8) {
+                        const node = i % 8;
+                        const a = (node / 8) * Math.PI * 2;
+                        const t = Math.random();
+                        set(i, Math.cos(a) * 1.45 * t + j(0.025), Math.sin(a) * 1.45 * t + j(0.025), j(0.03));
                     } else {
-                        // Internal Code Lines (horizontal segments)
-                        const lineIdx = Math.floor(i / (particlesCount * 0.04));
-                        const y = 1.0 - (lineIdx % 10 * 0.22);
-                        const t = Math.random() * 1.8 - 0.9;
-                        pos[i * 3 + 0] = t * 1.7;
-                        pos[i * 3 + 1] = y;
-                        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.1;
+                        const a = (i / particlesCount) * Math.PI * 2 * 7;
+                        const r = 1.0 + 0.45 * Math.sin(a * 2.4);
+                        set(i, Math.cos(a) * r + j(0.02), Math.sin(a) * r + j(0.02), j(0.05));
                     }
                 }
                 break;
 
-            case 'social': // Dashboard Window with Hex Pattern
+            case 'event':
                 for (let i = 0; i < particlesCount; i++) {
-                    if (i < particlesCount * 0.3) {
-                        // Rectangular Frame
-                        const edge = i % 4;
-                        const t = Math.random() * 2.0 - 1.0;
-                        const s = 1.6; // Scale down social
-                        if (edge === 0) { pos[i * 3 + 0] = t * s; pos[i * 3 + 1] = s; }
-                        else if (edge === 1) { pos[i * 3 + 0] = t * s; pos[i * 3 + 1] = -s; }
-                        else if (edge === 2) { pos[i * 3 + 0] = s; pos[i * 3 + 1] = t * s; }
-                        else { pos[i * 3 + 0] = -s; pos[i * 3 + 1] = t * s; }
-                        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.05;
+                    const p = i / particlesCount;
+                    if (p < 0.34) {
+                        const e = i % 4;
+                        const t = Math.random() * 2 - 1;
+                        const sx = 1.08;
+                        const sy = 0.9;
+                        if (e === 0) set(i, t * sx, sy, j(0.05));
+                        else if (e === 1) set(i, t * sx, -sy, j(0.05));
+                        else if (e === 2) set(i, sx, t * sy, j(0.05));
+                        else set(i, -sx, t * sy, j(0.05));
+                    } else if (p < 0.56) {
+                        const row = Math.floor(Math.random() * 4);
+                        const col = Math.floor(Math.random() * 5);
+                        set(i, -0.68 + col * 0.34 + j(0.05), 0.42 - row * 0.26 + j(0.05), j(0.04));
                     } else {
-                        // Hexagonal Particle Lattice (sampling a grid)
-                        const row = Math.floor(Math.sqrt(i)) % 15;
-                        const col = i % 15;
-                        const x = (col - 7.5) * 0.2 + (row % 2 === 0 ? 0.1 : 0);
-                        const y = (row - 7.5) * 0.18;
-                        // Wave displacement
-                        const wave = Math.sin(x * 2.0 + y * 2.0) * 0.1;
-                        pos[i * 3 + 0] = x;
-                        pos[i * 3 + 1] = y + wave;
-                        pos[i * 3 + 2] = Math.cos(x * 3.0) * 0.1;
+                        const t = (p - 0.56) / 0.44;
+                        const arm = i % 10;
+                        const a = (arm / 10) * Math.PI;
+                        const r = 0.35 + t * 1.45;
+                        set(i, Math.cos(a) * r + j(0.03), 0.9 + Math.sin(a) * r + j(0.03), j(0.07));
                     }
                 }
                 break;
 
-            case 'app': // Smartphone Border + Floating UI
+            case 'web':
                 for (let i = 0; i < particlesCount; i++) {
-                    if (i < particlesCount * 0.5) {
-                        // Smartphone Outline (Rounded Rect)
-                        const t = (i / (particlesCount * 0.5)) * Math.PI * 2;
-                        const sx = 0.8;
-                        const sy = 1.6; // Scale down phone
-                        const r = 0.1;
-                        const x = Math.sign(Math.cos(t)) * sx + Math.cos(t) * r;
-                        const y = Math.sign(Math.sin(t)) * sy + Math.sin(t) * r;
-                        pos[i * 3 + 0] = x;
-                        pos[i * 3 + 1] = y;
-                        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.1;
+                    const p = i / particlesCount;
+                    if (p < 0.28) {
+                        const e = i % 4;
+                        const t = Math.random() * 2 - 1;
+                        const sx = 1.65;
+                        const sy = 1.0;
+                        if (e === 0) set(i, t * sx, sy, j(0.04));
+                        else if (e === 1) set(i, t * sx, -sy, j(0.04));
+                        else if (e === 2) set(i, sx, t * sy, j(0.04));
+                        else set(i, -sx, t * sy, j(0.04));
+                    } else if (p < 0.35) {
+                        const c = i % 3;
+                        set(i, -1.32 + c * 0.24 + j(0.04), 0.8 + j(0.03), j(0.03));
+                    } else if (p < 0.78) {
+                        const line = Math.floor(Math.random() * 8);
+                        const len = 0.45 + Math.random() * 1.85;
+                        set(i, -1.32 + Math.random() * len, 0.52 - line * 0.2 + j(0.025), j(0.03));
                     } else {
-                        // Floating UI Panels (4 small rects)
-                        const panelIdx = i % 4;
-                        const px = (panelIdx % 2 === 0 ? 1.2 : -1.2);
-                        const py = (panelIdx < 2 ? 0.9 : -0.9);
-                        const size = 0.35;
-                        pos[i * 3 + 0] = px + (Math.random() - 0.5) * size;
-                        pos[i * 3 + 1] = py + (Math.random() - 0.5) * size;
-                        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.4;
+                        const t = Math.random();
+                        const side = i % 2 === 0 ? -1 : 1;
+                        set(i, 1.2 + side * 0.18 + j(0.02), -0.76 + t * 0.24 + j(0.02), j(0.03));
                     }
                 }
                 break;
 
-            case 'hero': // Atomic Energy Core
+            case 'social':
                 for (let i = 0; i < particlesCount; i++) {
-                    if (i < particlesCount * 0.3) {
-                        // Core Central Sphere (Dense)
-                        const phi = Math.acos(-1 + (2 * i) / (particlesCount * 0.3));
-                        const theta = Math.sqrt(particlesCount * 0.3 * Math.PI) * phi;
-                        const r = 0.8 + Math.random() * 0.2; // Scale up core
-                        pos[i * 3 + 0] = r * Math.cos(theta) * Math.sin(phi);
-                        pos[i * 3 + 1] = r * Math.sin(theta) * Math.sin(phi);
-                        pos[i * 3 + 2] = r * Math.cos(phi);
+                    const p = i / particlesCount;
+                    if (p < 0.26) {
+                        const e = i % 4;
+                        const t = Math.random() * 2 - 1;
+                        const sx = 1.5;
+                        const sy = 0.95;
+                        if (e === 0) set(i, t * sx, sy, j(0.04));
+                        else if (e === 1) set(i, t * sx, -sy, j(0.04));
+                        else if (e === 2) set(i, sx, t * sy, j(0.04));
+                        else set(i, -sx, t * sy, j(0.04));
+                    } else if (p < 0.72) {
+                        const row = Math.floor(Math.random() * 11);
+                        const col = Math.floor(Math.random() * 12);
+                        const x = (col - 5.5) * 0.2 + (row % 2 ? 0.1 : 0);
+                        const y = (row - 5) * 0.17;
+                        set(i, x + j(0.03), y + j(0.03), Math.sin(x * 2.5) * 0.07);
                     } else {
-                        // 5 Intersecting Elliptical Orbits
-                        const orbitIdx = i % 5;
+                        const a = (i / particlesCount) * Math.PI * 2 * 5;
+                        const r = 0.32 + (a / (Math.PI * 10)) * 1.18;
+                        set(i, Math.cos(a) * r + j(0.02), Math.sin(a) * r + j(0.02), j(0.05));
+                    }
+                }
+                break;
+
+            case 'app':
+                for (let i = 0; i < particlesCount; i++) {
+                    const p = i / particlesCount;
+                    if (p < 0.42) {
+                        const t = (p / 0.42) * Math.PI * 2;
+                        const sx = 0.84;
+                        const sy = 1.52;
+                        const r = 0.14;
+                        const x = Math.sign(Math.cos(t)) * (sx - r) + r * Math.cos(t);
+                        const y = Math.sign(Math.sin(t)) * (sy - r) + r * Math.sin(t);
+                        set(i, x + j(0.025), y + j(0.025), j(0.04));
+                    } else if (p < 0.52) {
+                        set(i, (Math.random() - 0.5) * 0.34, 1.35 + j(0.03), j(0.03));
+                    } else if (p < 0.84) {
+                        const card = i % 6;
+                        const a = (card / 6) * Math.PI * 2;
+                        const cx = Math.cos(a) * 1.65;
+                        const cy = Math.sin(a) * 1.2;
+                        set(i, cx + j(0.2), cy + j(0.14), j(0.07));
+                    } else {
+                        const card = i % 6;
+                        const a = (card / 6) * Math.PI * 2;
+                        const t = Math.random();
+                        set(i, Math.cos(a) * 1.65 * t + j(0.02), Math.sin(a) * 1.2 * t + j(0.02), j(0.03));
+                    }
+                }
+                break;
+
+            case 'hero':
+                const eyeScaleX = 1.68;
+                const eyeScaleY = 1.56;
+                for (let i = 0; i < particlesCount; i++) {
+                    const p = i / particlesCount;
+                    if (p < 0.48) {
+                        // Outer almond contour.
+                        const t = (p / 0.48) * Math.PI * 2;
+                        const x = 1.65 * Math.cos(t);
+                        const y = 0.72 * Math.sin(t) * (1.0 - 0.25 * Math.cos(2.0 * t));
+                        set(i, (x + j(0.03)) * eyeScaleX, (y + j(0.03)) * eyeScaleY, j(0.05));
+                    } else if (p < 0.76) {
+                        // Iris ring.
+                        const t = ((p - 0.48) / 0.28) * Math.PI * 2;
+                        const r = 0.46 + j(0.04);
+                        set(
+                            i,
+                            (Math.cos(t) * r + j(0.02)) * eyeScaleX,
+                            (Math.sin(t) * r + j(0.02)) * eyeScaleY,
+                            j(0.04)
+                        );
+                    } else if (p < 0.9) {
+                        // Pupil core.
                         const t = Math.random() * Math.PI * 2;
-                        const a = 1.7; // Scale down hero orbits
-                        const b = 0.9;
-
-                        let x = Math.cos(t) * a;
-                        let y = Math.sin(t) * b;
-                        let z = (Math.random() - 0.5) * 0.05;
-
-                        if (orbitIdx === 1) {
-                            const tmp = x; x = z; z = y; y = tmp;
-                        } else if (orbitIdx === 2) {
-                            const tmp = y; y = z; z = tmp;
-                        } else if (orbitIdx === 3) {
-                            const angle = Math.PI / 4;
-                            const x1 = x * Math.cos(angle) - z * Math.sin(angle);
-                            const z1 = x * Math.sin(angle) + z * Math.cos(angle);
-                            x = x1; z = z1;
-                        } else if (orbitIdx === 4) {
-                            const angle = -Math.PI / 4;
-                            const y1 = y * Math.cos(angle) - z * Math.sin(angle);
-                            const z1 = y * Math.sin(angle) + z * Math.cos(angle);
-                            y = y1; z = z1;
-                        }
-
-                        pos[i * 3 + 0] = x;
-                        pos[i * 3 + 1] = y;
-                        pos[i * 3 + 2] = z;
+                        const r = Math.sqrt(Math.random()) * 0.18;
+                        set(
+                            i,
+                            (Math.cos(t) * r + j(0.015)) * eyeScaleX,
+                            (Math.sin(t) * r + j(0.015)) * eyeScaleY,
+                            j(0.03)
+                        );
+                    } else {
+                        // Subtle upper/lower arcs to read as eyelids.
+                        const t = Math.random();
+                        const side = i % 2 === 0 ? 1 : -1;
+                        const x = -1.2 + t * 2.4;
+                        const y = side * (0.22 + 0.12 * Math.cos((x / 1.2) * Math.PI));
+                        set(i, (x + j(0.02)) * eyeScaleX, (y + j(0.02)) * eyeScaleY, j(0.04));
                     }
                 }
                 break;
@@ -242,11 +262,10 @@ export const useParticleMorph = (particlesCount = 25000) => {
                     const phi = Math.acos(-1 + (2 * i) / particlesCount);
                     const theta = Math.sqrt(particlesCount * Math.PI) * phi;
                     const r = 1.3;
-                    pos[i * 3 + 0] = r * Math.cos(theta) * Math.sin(phi);
-                    pos[i * 3 + 1] = r * Math.sin(theta) * Math.sin(phi);
-                    pos[i * 3 + 2] = r * Math.cos(phi);
+                    set(i, r * Math.cos(theta) * Math.sin(phi), r * Math.sin(theta) * Math.sin(phi), r * Math.cos(phi));
                 }
         }
+
         return pos;
     }, [particlesCount]);
 
