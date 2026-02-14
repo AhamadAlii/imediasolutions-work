@@ -1,65 +1,170 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import Navbar from '@/components/Navbar';
+import ServicesSection from '@/components/ServicesSection';
+import ParticleScene from '@/components/ParticleScene';
+import CaseStudies from '@/components/CaseStudies';
+import BrandsMarquee from '@/components/BrandsMarquee';
+import CTASection from '@/components/CTASection';
+import Footer from '@/components/Footer';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
+  const [activeService, setActiveService] = useState('hero');
+  const [heroHidden, setHeroHidden] = useState(false);
+  const heroContentRef = useRef(null);
+  const particleShiftRef = useRef({ x: 0 });
+
+  useEffect(() => {
+    if (!heroContentRef.current) return;
+
+    // 1. Hero Content Fade & Scale
+    gsap.to(heroContentRef.current, {
+      opacity: 0,
+      y: -150,
+      scale: 0.9,
+      ease: 'power2.inOut',
+      scrollTrigger: {
+        trigger: '#services-trigger',
+        start: 'top bottom',
+        end: 'top center',
+        scrub: true,
+        onEnter: () => setHeroHidden(false),
+        onLeave: () => setHeroHidden(true),
+        onEnterBack: () => {
+          setHeroHidden(false);
+          setActiveService('hero');
+        },
+      }
+    });
+
+    // 2. Particle Shift Animation (Move to left stage as we approach Services)
+    gsap.to(particleShiftRef.current, {
+      x: 1,
+      ease: 'power2.inOut',
+      scrollTrigger: {
+        trigger: '#services-trigger',
+        start: 'top bottom',
+        end: 'bottom bottom',
+        scrub: 1,
+      }
+    });
+
+    // 3. Hero Reset Logic
+    ScrollTrigger.create({
+      trigger: '#services-trigger',
+      start: 'top 20%',
+      onEnterBack: () => {
+        setActiveService('hero');
+        particleShiftRef.current.x = 0;
+      },
+    });
+
+    // 4. Robust Section Top Fallback
+    ScrollTrigger.create({
+      trigger: '#services-section',
+      start: 'top bottom',
+      onEnter: () => setActiveService('video'),
+      onEnterBack: () => setActiveService('video'),
+    });
+
+    // 5. Global Top Reset
+    ScrollTrigger.create({
+      trigger: 'body',
+      start: 'top top',
+      onEnterBack: () => {
+        setActiveService('hero');
+        particleShiftRef.current.x = 0;
+      }
+    });
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
+    <main className="relative min-h-screen bg-[#050510] text-white">
+      <Navbar />
+
+      {/* Background Particles Stage */}
+      <div
+        className={`fixed inset-0 pointer-events-none transition-all duration-700 ${activeService === 'hero' ? 'z-10' : 'z-[110]'}`}
+        style={{
+          clipPath: activeService === 'hero' ? 'inset(0 0 0 0)' : 'inset(0 60% 0 0)'
+        }}
+      >
+        <ParticleScene activeService={activeService} particleShift={particleShiftRef.current.x} />
+      </div>
+
+      {/* Hero Section */}
+      <section
+        className={`relative z-[60] flex min-h-screen flex-col items-center justify-center px-6 pt-20 text-center transition-all duration-1000 ease-in-out ${heroHidden ? 'pointer-events-none opacity-0 invisible' : 'opacity-100'}`}
+      >
+        <div ref={heroContentRef} className="max-w-6xl">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-indigo-300 text-[10px] font-medium tracking-widest uppercase mb-12">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            </span>
+            Innovation Driven Studio
+          </div>
+
+          <h1
+            className="text-5xl md:text-8xl font-bold tracking-tighter text-white mb-8 leading-[0.9]"
+            style={{ textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+          >
+            EYE<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500 italic">MEDIA</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p
+            className="max-w-2xl mx-auto text-gray-200 text-lg md:text-xl font-normal mb-12 leading-relaxed"
+            style={{ textShadow: '0 4px 20px rgba(0,0,0,0.6)' }}
+          >
+            Eyemedia crafts high-fidelity digital experiences that bridge the gap between imagination and execution.
           </p>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <button className="group relative px-8 py-4 bg-white text-black rounded-full font-bold text-xs tracking-widest hover:bg-indigo-50 transition-all duration-300">
+              EXPLORE OUR WORK
+            </button>
+            <button className="px-8 py-4 border border-white/10 rounded-full font-bold text-xs tracking-widest hover:bg-white/5 transition-all duration-300">
+              VIEW SERVICES
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-12 mt-24 border-t border-white/5 pt-12">
+            <div>
+              <div className="text-3xl font-bold text-white mb-1">100+</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-widest">Global Clients</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-white mb-1">15+</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-widest">Awards Won</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-white mb-1">05+</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-widest">Years Experience</div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+
+      <div id="services-trigger" className="h-[30vh]" />
+
+      {/* Services Section */}
+      <div id="services-section" className="relative z-[70]">
+        <ServicesSection onServiceChange={setActiveService} activeId={activeService} />
+      </div>
+
+      {/* NEW SECTIONS CONTENT */}
+      <div className="relative z-[120] bg-black">
+        <CaseStudies />
+        <BrandsMarquee />
+        <CTASection />
+        <Footer />
+      </div>
+    </main>
   );
 }
