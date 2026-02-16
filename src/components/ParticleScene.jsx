@@ -528,7 +528,7 @@ const ParticleScene = ({ activeService, particleShift, isMobile }) => {
             <Canvas
                 camera={{ position: [0, 0, 4], fov: 75 }}
                 gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
-                dpr={[1, 1.5]}
+                dpr={isMobile ? [1, 1.3] : [1, 1.5]}
                 frameloop="demand"
             >
                 <CameraRig />

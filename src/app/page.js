@@ -11,6 +11,7 @@ import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Lenis from 'lenis';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,6 +21,7 @@ export default function Home() {
   const [heroHidden, setHeroHidden] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const heroContentRef = useRef(null);
+  const heroRef = useRef(null);
   const particleShiftRef = useRef({ x: 0 });
 
   useEffect(() => {
@@ -27,6 +29,31 @@ export default function Home() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Mobile-only Hero Smooth Scroll
+  useEffect(() => {
+    if (window.innerWidth >= 768 || !heroRef.current) return;
+
+    const lenis = new Lenis({
+      wrapper: heroRef.current,
+      content: heroRef.current,
+      duration: 1.05,
+      smoothWheel: false,
+      smoothTouch: true
+    });
+
+    let rafId;
+    const raf = (t) => {
+      lenis.raf(t);
+      rafId = requestAnimationFrame(raf);
+    };
+    rafId = requestAnimationFrame(raf);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
   }, []);
 
   useEffect(() => {
@@ -135,6 +162,7 @@ export default function Home() {
 
       {/* Hero Section */}
       <section
+        ref={heroRef}
         className={`relative z-[60] flex min-h-screen items-center px-6 pt-20 transition-all duration-1000 ease-in-out ${heroHidden ? 'pointer-events-none opacity-0 invisible' : 'opacity-100'}`}
       >
         <div ref={heroContentRef} className="w-full max-w-7xl mx-auto">

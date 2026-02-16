@@ -253,6 +253,13 @@ html {
   fill: #3a3d91;
 }
 
+/* Fix mobile micro-stutter */
+.services-track {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
 .service-logo {
   position: absolute;
   right: 0;

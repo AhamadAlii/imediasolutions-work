@@ -112,7 +112,7 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                     trigger: triggerEl,
                     start: 'top top',
                     end: () => `+=${window.innerHeight * (totalCards - 1) * (isMobile ? 0.8 : 1.1)}`,
-                    scrub: isMobile ? 0.5 : 1.0, // More responsive on mobile, while still silky
+                    scrub: isMobile ? true : 1.0, // Instant finger tracking on mobile
                     pin: true,
                     anticipatePin: 1,
                     invalidateOnRefresh: true,
@@ -120,7 +120,7 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                         snapTo: 1 / (totalCards - 1),
                         duration: { min: 0.3, max: 0.8 },
                         delay: 0,
-                        ease: 'power2.inOut',
+                        ease: isMobile ? "none" : 'power2.inOut',
                     },
                     onUpdate: (self) => {
                         const index = Math.min(Math.round(self.progress * (totalCards - 1)), totalCards - 1);
@@ -190,7 +190,7 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                     {/* THE TRACK */}
                     <div
                         ref={sectionRef}
-                        className="flex flex-nowrap h-full items-center z-[70]"
+                        className="flex flex-nowrap h-full items-center z-[70] services-track"
                         style={{
                             paddingLeft: horizontalGutter,
                             paddingRight: '60vw', // Room for last card
