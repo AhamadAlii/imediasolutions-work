@@ -140,49 +140,50 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
     }, [onServiceChange, isMobile]);
 
     // Layout Constants
-    const leftPaneWidth = isMobile ? '0px' : 'clamp(320px, 35vw, 520px)';
-    const topPaneHeight = isMobile ? '40vh' : '0px';
+    const leftPaneWidth = isMobile ? '100%' : '40vw';
     const horizontalGutter = isMobile ? '2rem' : 'clamp(1rem, 5vw, 2.5rem)';
-    const headerPadding = isMobile ? '20px' : '40px';
 
     return (
-        <section ref={triggerRef} className="relative bg-black overflow-hidden">
-            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-screen w-full relative`}>
+        <section ref={triggerRef} className="relative bg-black overflow-hidden h-screen flex flex-col">
 
+            {/* TOP HEADER ZONE (Full Width on Desktop, 15% on Mobile) */}
+            <div
+                className={`relative z-[110] flex items-center justify-center border-b border-white/5 bg-black transition-all duration-700`}
+                style={{ height: isMobile ? '15vh' : '10vh' }}
+            >
+                <div className="flex flex-col items-center">
+                    <h2 className="luxe-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white uppercase leading-none">
+                        Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Services</span>
+                    </h2>
+                </div>
+            </div>
+
+            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} flex-1 relative overflow-hidden`}>
+
+                {/* SHAPE ZONE (40% Width on Desktop, 35% Height on Mobile) */}
                 <div
-                    className={`relative z-[100] border-white/5 ${isMobile ? 'h-[40vh] w-full border-b bg-transparent' : 'h-full border-r bg-black shadow-[30px_0_120px_rgba(0,0,0,1)]'}`}
+                    className={`relative z-[100] border-white/5 ${isMobile ? 'h-[35vh] w-full border-b bg-transparent shadow-none' : 'h-full border-r bg-black shadow-[30px_0_120px_rgba(0,0,0,1)]'}`}
                     style={{
                         width: isMobile ? '100%' : leftPaneWidth,
-                        height: isMobile ? topPaneHeight : '100%'
                     }}
                 >
-                    {/* The 3D Shape from page.js will be rendered via dynamic mask logic behind this transparent zone */}
-                    <div className={`absolute inset-0 flex pointer-events-none ${isMobile ? 'items-center justify-center' : 'items-start pt-[12vh] justify-center'}`}>
-                        <div className={`w-full rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center transition-all duration-700 ${isMobile ? 'h-full bg-indigo-500/[0.02] backdrop-blur-[2px] p-8' : 'h-auto py-12 px-8 bg-black/40 backdrop-blur-xl max-w-[85%]'}`}>
-                            <h2 className="luxe-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white uppercase px-4 leading-none">
-                                Our <br className="hidden md:block" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Services</span>
-                            </h2>
-                            <p className="max-w-[280px] text-[10px] md:text-xs text-gray-300/80 font-light mt-6 leading-relaxed px-4">
-                                Professional digital solutions designed for the modern era.
-                            </p>
+                    {/* The 3D Shape from page.js will be rendered via dynamic mask logic behind this zone */}
+                    {!isMobile && (
+                        <div className="absolute inset-0 flex items-center justify-center p-8 pointer-events-none opacity-20">
+                            <h2 className="luxe-display text-8xl font-black text-white/5 rotate-[-90deg] whitespace-nowrap">CREATIVE</h2>
                         </div>
-                    </div>
+                    )}
                 </div>
 
-                {/* HORIZONTAL CARDS ZONE (60% Weight) */}
-                <div className={`relative flex items-center overflow-hidden ${isMobile ? 'h-[60vh] w-full' : 'h-full flex-1'}`}>
+                {/* CARDS ZONE (60% Weight on Desktop, 50% Height on Mobile) */}
+                <div className={`relative flex items-center overflow-hidden ${isMobile ? 'h-[50vh] w-full' : 'h-full flex-1'}`}>
 
-                    {/* FIXED HEADER (only on desktop if needed, or adjust for mobile) */}
+                    {/* FIXED BACKGROUND TEXT (only on desktop) */}
                     {!isMobile && (
                         <div
-                            className="absolute top-[9vh] z-[110] flex justify-between items-end pb-8 border-b border-white/5"
-                            style={{
-                                left: horizontalGutter,
-                                width: `calc(100% - (${horizontalGutter} * 2))`
-                            }}
+                            className="absolute top-[5vh] z-[10] flex justify-center items-center w-full opacity-5 pointer-events-none"
                         >
-                            <h2 className="luxe-display text-6xl font-bold tracking-tight text-white uppercase italic opacity-20">EPIC CONTENT</h2>
+                            <h2 className="luxe-display text-[15vw] font-bold tracking-tighter text-white uppercase italic whitespace-nowrap">IMEDIA SOLUTIONS</h2>
                         </div>
                     )}
 
@@ -192,7 +193,7 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                         className="flex flex-nowrap h-full items-center z-[70] transition-all duration-300"
                         style={{
                             paddingLeft: horizontalGutter,
-                            paddingRight: '40vw' // Extra room for last card
+                            paddingRight: '60vw' // Room for last card
                         }}
                     >
                         {services.map((service, index) => {
@@ -203,8 +204,8 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                                     ref={el => cardsRef.current[index] = el}
                                     className={`service-parent shrink-0 transition-all duration-500 mr-8 md:mr-16 ${isActive ? 'scale-105 opacity-100 z-50' : 'scale-[0.9] opacity-40 z-10'}`}
                                     style={{
-                                        width: isMobile ? 'min(85vw, 320px)' : 'min(30vw, 360px)',
-                                        height: isMobile ? 'min(45vh, 320px)' : 'min(62vh, 460px)'
+                                        width: isMobile ? 'min(80vw, 300px)' : 'min(28vw, 340px)',
+                                        height: isMobile ? 'min(40vh, 320px)' : 'min(62vh, 460px)'
                                     }}
                                 >
                                     <div className={`service-card-3d ${isActive ? 'active' : ''}`}>
@@ -224,11 +225,11 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                                         <div className="service-glass"></div>
                                         <div className="service-content">
                                             <span className="title uppercase tracking-tight text-xs sm:text-sm">{service.title}</span>
-                                            <span className="text text-[10px] sm:text-xs">{service.desc}</span>
+                                            <span className="text text-[10px] sm:text-xs line-clamp-2">{service.desc}</span>
                                         </div>
                                         <div className="service-bottom">
-                                            <div className="mt-4 md:mt-8">
-                                                <button className="luxe-button luxe-button-outline w-full py-2 md:py-4 text-[9px] md:text-[10px] tracking-[0.2em]">
+                                            <div className="mt-4">
+                                                <button className="luxe-button luxe-button-outline w-full py-2 text-[9px] tracking-[0.2em]">
                                                     VIEW MORE
                                                 </button>
                                             </div>

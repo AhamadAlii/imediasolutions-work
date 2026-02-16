@@ -255,7 +255,7 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
         uProgress: { value: 0 },
         uExpansion: { value: 0 },
         uMouse: { value: new THREE.Vector2(0, 0) },
-        uPixelRatio: { value: Math.min(window.devicePixelRatio, perfTier === 'high' ? 1.25 : 1) },
+        uPixelRatio: { value: Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, perfTier === 'high' ? 1.25 : 1) },
         uSize: { value: perfTier === 'high' ? 6.6 : 5.8 },
         uHueShift: { value: 0 }
     }), [perfTier]);
@@ -366,19 +366,25 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
             const shiftAmount = particleShiftRef.current.x;
 
             if (isMobile && activeService !== 'hero') {
-                // Mobile stacked layout: Center in top 40%
-                // Viewport center is 0.5. Top 40% center is 0.2.
-                // Shift UP by 0.3 viewport heights.
+                // Mobile stacked layout (BLUEPRINT): 15% Title | 35% Shape | 50% Card
+                // Shape zone is from 15% to 50% height. Center of shape zone is at 32.5% height.
+                // Standard center is 50%. So shift UP by 17.5% (0.175 viewport heights).
+                // Actually 0.5 - 0.325 = 0.175.
                 const targetX = 0;
                 meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
-                const targetY = viewport.height * 0.3;
+                const targetY = viewport.height * 0.175;
                 meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
             } else {
                 // Desktop or Hero view
+                // Desktop BLUEPRINT: 10% Header | 90% (Shape 40% / Cards 60%)
+                // Shape zone height is 90% (starts at 10%). Center is at 55% height.
+                // Standard center is 50%. So shift DOWN by 5% (0.05 viewport heights).
                 const heroBiasX = activeService === 'hero' ? viewport.width * 0.24 : 0;
-                const targetX = heroBiasX - viewport.width * 0.3 * shiftAmount;
+                const shiftX = activeService === 'hero' ? 0.3 : 0.3; // Match 40/60 split
+                const targetX = heroBiasX - viewport.width * shiftX * shiftAmount;
                 meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
-                const targetY = -(viewport.height * 0.125) * shiftAmount;
+
+                const targetY = activeService === 'hero' ? 0 : -(viewport.height * 0.05);
                 meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
             }
 
@@ -392,7 +398,10 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
                     0.08
                 );
             } else {
-                const targetScale = isMobile ? 0.75 : 1;
+                // COMPRESS SHAPE: Scale down to fit in smaller zones
+                // On mobile, height is only 35vh. Standard shape fits 100vh.
+                // On desktop, width is only 40vw.
+                const targetScale = isMobile ? 0.65 : 1;
                 meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, targetScale, 0.1);
                 meshRef.current.scale.y = THREE.MathUtils.lerp(meshRef.current.scale.y, targetScale, 0.1);
                 meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.1);

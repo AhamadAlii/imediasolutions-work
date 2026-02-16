@@ -112,11 +112,12 @@ export default function Home() {
   }, []);
 
   // CLIP PATH LOGIC:
-  // Desktop: Left 40% visible -> inset(0 60% 0 0)
-  // Mobile/Tab: Top 40% visible -> inset(0 0 60% 0)
+  // Desktop: Top 10% is header. Left 40% starts at 10% height -> inset(10% 60% 0 0)
+  // Mobile/Tab: 0-15% title, 15-50% shape, 50-100% cards.
+  // Shape zone is 15% to 50% -> inset(15% 0 50% 0)
   let currentClipPath = 'inset(0 0 0 0)';
   if (activeService !== 'hero') {
-    currentClipPath = isMobile ? 'inset(0 0 60% 0)' : 'inset(0 60% 0 0)';
+    currentClipPath = isMobile ? 'inset(15% 0 50% 0)' : 'inset(10% 60% 0 0)';
   }
 
   return (
