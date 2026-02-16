@@ -177,11 +177,12 @@ const MobileServiceSection = ({ service, index, total, onServiceChange, isExpand
 
         const triggers = [];
 
-        // When this section enters the viewport center area, show its shape
+        // Tight zone: shape only shows when section is centered in viewport.
+        // As soon as user starts scrolling (center moves out of 40-60% zone), scatter fires immediately.
         triggers.push(ScrollTrigger.create({
             trigger: sectionRef.current,
-            start: 'top 60%',
-            end: 'bottom 40%',
+            start: 'center 60%',
+            end: 'center 40%',
             onEnter: () => {
                 onCollapse(); // close any expanded card
                 onServiceChange(service.id);
