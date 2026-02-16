@@ -42,7 +42,7 @@ const CTASection = () => {
         <section
             ref={containerRef}
             onMouseMove={handleMouseMove}
-            className="bg-black py-40 px-6 relative overflow-hidden group"
+            className="bg-black py-20 md:py-40 px-4 md:px-6 relative overflow-hidden group"
         >
             {/* FLUID BACKGROUND */}
             <div
@@ -52,7 +52,7 @@ const CTASection = () => {
                 }}
             />
 
-            <div className="max-w-6xl mx-auto flex flex-col items-center justify-center text-center relative z-10 border border-white/5 rounded-[4rem] py-32 bg-white/[0.01] backdrop-blur-3xl overflow-hidden shadow-2xl">
+            <div className="max-w-6xl mx-auto flex flex-col items-center justify-center text-center relative z-10 border border-white/5 rounded-[2rem] md:rounded-[4rem] py-16 md:py-32 px-6 bg-white/[0.01] backdrop-blur-3xl overflow-hidden shadow-2xl">
                 {/* Secondary light for the box */}
                 <div
                     className="absolute inset-0 opacity-20 blur-[80px] pointer-events-none transition-transform duration-1000 group-hover:scale-110"
@@ -61,7 +61,7 @@ const CTASection = () => {
                     }}
                 />
 
-                <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-white mb-16 leading-[1.1] max-w-4xl px-8">
+                <h2 className="luxe-heading text-3xl sm:text-5xl md:text-7xl font-semibold tracking-tight text-white mb-10 md:mb-16 leading-[1.1] md:leading-[1.04] max-w-4xl">
                     <span className="block">
                         {topWords.map((word, index) => (
                             <span
@@ -92,11 +92,8 @@ const CTASection = () => {
                     </span>
                 </h2>
 
-                <button className="group/btn relative px-10 py-5 bg-[#4B4EBD] text-white rounded-full font-bold text-xs tracking-widest overflow-hidden transition-all hover:scale-105 hover:bg-[#5C5FED]">
-                    <span className="relative z-10 flex items-center gap-3">
-                        LET&apos;S WORK TOGETHER <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
-                    </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                <button className="luxe-button luxe-button-primary py-4 md:py-6 px-8 md:px-12 scale-100 md:scale-110 text-[10px] md:text-[11px]">
+                    LET'S CREATE SOMETHING EXTRAORDINARY
                 </button>
             </div>
 

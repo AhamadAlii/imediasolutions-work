@@ -1,22 +1,75 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import gsap from 'gsap';
 
 const projects = [
-    { id: '01', name: 'Clinix AI', tags: ['Web Design', 'App Design', 'AI Development', 'GTM'] },
-    { id: '02', name: 'Synergies4', tags: ['App Design', 'AI Development'] },
-    { id: '03', name: 'Curehire', tags: ['Web Design', 'Development'] },
-    { id: '04', name: 'OWASP Foundation', tags: ['Web Design', 'Development'] },
-    { id: '05', name: 'Feature', tags: ['App Design', 'GTM'] },
+    { id: '01', name: 'Clinix AI', tags: ['Web Design', 'App Design', 'AI Development', 'GTM'], image: '/cases/1.jpeg' },
+    { id: '02', name: 'Synergies4', tags: ['App Design', 'AI Development'], image: '/cases/2.jpeg' },
+    { id: '03', name: 'Curehire', tags: ['Web Design', 'Development'], image: '/cases/3.jpeg' },
+    { id: '04', name: 'OWASP Foundation', tags: ['Web Design', 'Development'], image: '/cases/4.jpeg' },
+    { id: '05', name: 'Feature', tags: ['App Design', 'GTM'], image: '/cases/5.jpeg' },
 ];
 
 const CaseStudies = () => {
+    const [activeProject, setActiveProject] = useState(projects[0]);
+    const [isRowHovered, setIsRowHovered] = useState(false);
+    const imageRef = useRef(null);
+    const cardRef = useRef(null);
+    const titleOverlayRef = useRef(null);
+
+    // Swap Animation (Image Fade/Scale)
+    useEffect(() => {
+        if (imageRef.current) {
+            gsap.fromTo(imageRef.current,
+                { opacity: 0, scale: 1.1, y: 15 },
+                { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: 'power2.out' }
+            );
+        }
+
+        // Re-trigger 3D Tilt and Pop-out on Project Change (if hovered)
+        if (isRowHovered && cardRef.current && titleOverlayRef.current) {
+            gsap.to(cardRef.current, {
+                rotateX: 10,
+                rotateY: -10,
+                z: 20,
+                duration: 0.6,
+                ease: 'expo.out'
+            });
+            gsap.to(titleOverlayRef.current, {
+                z: 60,
+                opacity: 1,
+                duration: 0.6,
+                ease: 'expo.out'
+            });
+        }
+    }, [activeProject, isRowHovered]);
+
+    // Reset when not hovering anymore
+    useEffect(() => {
+        if (!isRowHovered && cardRef.current && titleOverlayRef.current) {
+            gsap.to(cardRef.current, {
+                rotateX: 0,
+                rotateY: 0,
+                z: 0,
+                duration: 0.6,
+                ease: 'power2.inOut'
+            });
+            gsap.to(titleOverlayRef.current, {
+                z: 0,
+                opacity: 0,
+                duration: 0.6,
+                ease: 'power2.inOut'
+            });
+        }
+    }, [isRowHovered]);
+
     return (
-        <section className="bg-black py-32 px-12 md:px-24">
+        <section className="bg-black py-32 px-12 md:px-24 overflow-hidden">
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start mb-20 gap-8">
-                    <h2 className="text-5xl font-bold tracking-tighter text-white">Case Studies</h2>
+                    <h2 className="luxe-heading text-6xl font-semibold tracking-tight text-white">Case Studies</h2>
                     <p className="max-w-[400px] text-gray-400 text-sm font-light leading-relaxed text-right">
                         Proven results, measurable impact—explore the transformations we've delivered.
                     </p>
@@ -24,15 +77,22 @@ const CaseStudies = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                     {/* PROJECTS TABLE */}
-                    <div className="flex flex-col border-t border-white/5">
+                    <div
+                        className="flex flex-col border-t border-white/5"
+                        onMouseLeave={() => setIsRowHovered(false)}
+                    >
                         {projects.map((project) => (
                             <div
                                 key={project.id}
-                                className="group flex items-center justify-between py-8 border-b border-white/5 hover:bg-white/[0.02] transition-colors px-4 cursor-pointer"
+                                onMouseEnter={() => {
+                                    setActiveProject(project);
+                                    setIsRowHovered(true);
+                                }}
+                                className={`group flex items-center justify-between py-8 border-b border-white/5 transition-all duration-300 px-4 cursor-pointer ${activeProject.id === project.id ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'}`}
                             >
                                 <div className="flex items-center gap-12">
-                                    <span className="text-xs font-medium text-gray-500 tracking-widest">{project.id}</span>
-                                    <h3 className="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight">
+                                    <span className={`text-xs font-medium tracking-widest transition-colors ${activeProject.id === project.id ? 'text-indigo-400' : 'text-gray-500'}`}>{project.id}</span>
+                                    <h3 className={`text-xl font-bold transition-colors uppercase tracking-tight ${activeProject.id === project.id ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
                                         {project.name}
                                     </h3>
                                 </div>
@@ -40,7 +100,7 @@ const CaseStudies = () => {
                                     {project.tags.map((tag) => (
                                         <span
                                             key={tag}
-                                            className="px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-[10px] text-gray-400 font-medium whitespace-nowrap"
+                                            className={`px-4 py-1.5 rounded-full border transition-all duration-300 text-[10px] font-medium whitespace-nowrap ${activeProject.id === project.id ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-300' : 'border-white/10 bg-white/5 text-gray-400'}`}
                                         >
                                             {tag}
                                         </span>
@@ -50,48 +110,23 @@ const CaseStudies = () => {
                         ))}
                     </div>
 
-                    {/* MOCKUP PREVIEW - CSS BASED */}
-                    <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden bg-[#0A0B14] border border-white/5 shadow-2xl group/mockup">
-                        {/* Dashboard Backdrop */}
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(58,61,145,0.15)_0%,transparent_50%)]" />
-
-                        {/* Grid Lines */}
-                        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(to right, #ffffff05 1px, transparent 1px), linear-gradient(to bottom, #ffffff05 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-
-                        {/* Simulated UI Content */}
-                        <div className="absolute inset-12 flex flex-col gap-6">
-                            <div className="flex justify-between items-center">
-                                <div className="h-4 w-32 bg-white/10 rounded-full animate-pulse" />
-                                <div className="flex gap-2">
-                                    <div className="h-2 w-2 bg-indigo-500 rounded-full" />
-                                    <div className="h-2 w-2 bg-indigo-500/40 rounded-full" />
-                                    <div className="h-2 w-2 bg-indigo-500/20 rounded-full" />
-                                </div>
+                    {/* PROJECT PREVIEW - 3D CARD */}
+                    <div className="case-3d-container aspect-[4/3] w-full">
+                        <div ref={cardRef} className="case-3d-card shadow-2xl">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
+                            <div ref={imageRef} className="w-full h-full">
+                                <Image
+                                    src={activeProject.image}
+                                    alt={activeProject.name}
+                                    fill
+                                    className="object-cover"
+                                    priority
+                                />
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4 h-full pt-4">
-                                <div className="bg-white/[0.03] rounded-2xl border border-white/[0.05] p-6 flex flex-col gap-4">
-                                    <div className="h-3 w-20 bg-white/10 rounded-full" />
-                                    <div className="h-24 w-full bg-gradient-to-t from-indigo-500/20 to-transparent rounded-lg border-b border-indigo-500/30" />
-                                </div>
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex-1 bg-white/[0.03] rounded-2xl border border-white/[0.05] p-6">
-                                        <div className="h-3 w-12 bg-white/10 rounded-full mb-4" />
-                                        <div className="flex gap-2 items-end h-12">
-                                            {[...Array(5)].map((_, i) => (
-                                                <div key={i} className="flex-1 rounded-t-sm bg-indigo-400/40" style={{ height: `${20 + i * 15}%` }} />
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="flex-1 bg-white/[0.03] rounded-2xl border border-white/[0.05] p-6">
-                                        <div className="h-3 w-24 bg-white/10 rounded-full" />
-                                    </div>
-                                </div>
+                            <div ref={titleOverlayRef} className="card_title_overlay z-20">
+                                {activeProject.name}
                             </div>
                         </div>
-
-                        {/* Glass Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 via-transparent to-transparent opacity-0 group-hover/mockup:opacity-100 transition-opacity duration-1000" />
                     </div>
                 </div>
             </div>

@@ -11,7 +11,7 @@ const BrandsMarquee = () => {
     return (
         <section className="bg-black py-28 md:py-36 overflow-hidden relative">
             <div className="max-w-7xl mx-auto text-center mb-14 md:mb-18 cursor-default px-6">
-                <h2 className="text-4xl md:text-6xl font-bold text-white mb-3">Trusted by Industry Leaders</h2>
+                <h2 className="luxe-heading text-5xl md:text-7xl font-semibold text-white mb-3">Trusted by Industry Leaders</h2>
                 <p className="text-white/80 text-base md:text-2xl font-light">
                     Powering Innovation for Companies Worldwide
                 </p>

@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Code2, Palette, Rocket, Smartphone, Sparkles, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { Code2, Palette, Rocket, Smartphone, Sparkles, CheckCircle2 } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -78,103 +78,116 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
     const triggerRef = useRef(null);
     const cardsRef = useRef([]);
     const lastActiveRef = useRef(activeId);
-    const leftPaneWidth = 'clamp(280px, 38vw, 520px)';
-    const horizontalGutter = '2.5rem';
+
+    // Dynamic values for responsiveness
+    // On Desktop: Shape is left 40%, Cards are right 60%
+    // On Mobile/Tab: Shape is top 40%, Cards are bottom 60%
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
-        const totalCards = services.length;
-        const triggerEl = triggerRef.current;
-        const sectionEl = sectionRef.current;
-        if (!triggerEl || !sectionEl) return;
+        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
-        // 1. PINNING & PROGRESS
-        const pin = gsap.to(sectionEl, {
-            x: () => {
-                const track = sectionEl;
-                const cards = cardsRef.current;
-                if (!track || cards.length === 0) return 0;
+    useEffect(() => {
+        let ctx = gsap.context(() => {
+            const totalCards = services.length;
+            const triggerEl = triggerRef.current;
+            const sectionEl = sectionRef.current;
+            if (!triggerEl || !sectionEl) return;
 
-                // We want the last card to stop when its left edge aligns with the track start
-                // The track start is at 0 (translated). Padding handles initial offset.
-                // So max translation is the distance from the first card's left to the last card's left.
-                const lastCard = cards[cards.length - 1];
-                return -(lastCard.offsetLeft - cards[0].offsetLeft);
-            },
-            ease: 'none',
-            scrollTrigger: {
-                trigger: triggerEl,
-                start: 'top top',
-                end: () => `+=${window.innerHeight * (totalCards - 1) * 1.25}`,
-                scrub: 0.35,
-                pin: true,
-                anticipatePin: 1,
-                snap: {
-                    snapTo: 1 / (totalCards - 1),
-                    duration: { min: 0.12, max: 0.28 },
-                    delay: 0.01,
-                    ease: 'power2.out',
-                    inertia: false,
-                    directional: true
+            gsap.to(sectionEl, {
+                x: () => {
+                    const track = sectionEl;
+                    const cards = cardsRef.current;
+                    if (!track || !cards[0]) return 0;
+                    const lastCard = cards[cards.length - 1];
+                    // Calculate the total horizontal distance between first and last card
+                    return -(lastCard.offsetLeft - cards[0].offsetLeft);
                 },
-                onUpdate: (self) => {
-                    const progress = self.progress;
-                    const index = Math.min(
-                        Math.round(progress * (totalCards - 1)),
-                        totalCards - 1
-                    );
-
-                    const currentId = services[index].id;
-                    if (currentId !== lastActiveRef.current) {
-                        lastActiveRef.current = currentId;
-                        onServiceChange(currentId);
-                    }
+                ease: 'none',
+                scrollTrigger: {
+                    trigger: triggerEl,
+                    start: 'top top',
+                    end: () => `+=${window.innerHeight * (totalCards - 1) * 1.25}`,
+                    scrub: 0.35,
+                    pin: true,
+                    anticipatePin: 1,
+                    invalidateOnRefresh: true,
+                    onUpdate: (self) => {
+                        const index = Math.min(Math.round(self.progress * (totalCards - 1)), totalCards - 1);
+                        const currentId = services[index].id;
+                        if (currentId !== lastActiveRef.current) {
+                            lastActiveRef.current = currentId;
+                            onServiceChange(currentId);
+                        }
+                    },
+                    onEnter: () => onServiceChange(services[0].id),
+                    onLeaveBack: () => onServiceChange(services[0].id),
                 },
-                onEnter: () => onServiceChange(services[0].id),
-                onLeaveBack: () => onServiceChange(services[0].id),
-            },
-        });
-
-        return () => {
-            pin.kill();
-            ScrollTrigger.getAll().forEach(st => {
-                if (st.vars.trigger === triggerEl) st.kill();
             });
-        };
-    }, [onServiceChange]);
+        }, triggerRef);
+
+        return () => ctx.revert();
+    }, [onServiceChange, isMobile]);
+
+    // Layout Constants
+    const leftPaneWidth = isMobile ? '0px' : 'clamp(320px, 35vw, 520px)';
+    const topPaneHeight = isMobile ? '40vh' : '0px';
+    const horizontalGutter = isMobile ? '2rem' : 'clamp(1rem, 5vw, 2.5rem)';
+    const headerPadding = isMobile ? '20px' : '40px';
 
     return (
         <section ref={triggerRef} className="relative bg-black overflow-hidden">
-            <div className="flex h-screen w-full relative">
+            <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-screen w-full relative`}>
 
-                {/* CONTENT ZONE (Entire section height) */}
-                <div className="h-full w-full relative flex items-center">
-                    {/* THE MASK (Box) - Left column inside content zone - COMPLETELY BLACK */}
-                    <div
-                        className="absolute top-0 left-0 h-full bg-black z-[100] border-r border-white/5 shadow-[30px_0_120px_rgba(0,0,0,1)]"
-                        style={{ width: leftPaneWidth }}
-                    >
-                        {/* 3D Shape rendered here */}
+                {/* 3D SHAPE ZONE (40% Weight) */}
+                <div
+                    className={`relative z-[100] bg-black border-white/5 shadow-[30px_0_120px_rgba(0,0,0,1)] ${isMobile ? 'h-[40vh] w-full border-b' : 'h-full border-r'}`}
+                    style={{
+                        width: isMobile ? '100%' : leftPaneWidth,
+                        height: isMobile ? topPaneHeight : '100%'
+                    }}
+                >
+                    {/* The 3D Shape from page.js will be rendered via dynamic mask logic */}
+                    <div className="absolute inset-0 flex items-center justify-center p-8">
+                        <div className="w-full h-full rounded-3xl bg-indigo-500/5 border border-white/5 backdrop-blur-3xl flex flex-col items-center justify-center text-center">
+                            <h2 className="luxe-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white uppercase px-4">
+                                Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Services</span>
+                            </h2>
+                            <p className="max-w-[340px] text-[10px] md:text-xs text-gray-300/80 font-light mt-4 leading-relaxed px-6">
+                                Professional digital solutions designed for the modern era.
+                            </p>
+                        </div>
                     </div>
+                </div>
 
-                    {/* FIXED HEADER ROW (Stays fixed while track slides) */}
-                    <div
-                        className="absolute top-[9vh] z-[110] flex justify-between items-end pb-8 border-b border-white/5 whitespace-nowrap"
-                        style={{
-                            left: `calc(${leftPaneWidth} + ${horizontalGutter})`,
-                            width: `calc(100vw - ${leftPaneWidth} - (${horizontalGutter} * 2))`
-                        }}
-                    >
-                        <h2 className="text-5xl font-bold tracking-tighter text-white">Our Services</h2>
-                        <p className="max-w-[340px] text-xs text-gray-400 font-light leading-relaxed whitespace-normal pr-4">
-                            We offer comprehensive digital solutions that transform your business and drive innovation across every touchpoint.
-                        </p>
-                    </div>
+                {/* HORIZONTAL CARDS ZONE (60% Weight) */}
+                <div className={`relative flex items-center overflow-hidden ${isMobile ? 'h-[60vh] w-full' : 'h-full flex-1'}`}>
 
-                    {/* THE TRACK (Cards) */}
+                    {/* FIXED HEADER (only on desktop if needed, or adjust for mobile) */}
+                    {!isMobile && (
+                        <div
+                            className="absolute top-[9vh] z-[110] flex justify-between items-end pb-8 border-b border-white/5"
+                            style={{
+                                left: horizontalGutter,
+                                width: `calc(100% - (${horizontalGutter} * 2))`
+                            }}
+                        >
+                            <h2 className="luxe-display text-6xl font-bold tracking-tight text-white uppercase italic opacity-20">EPIC CONTENT</h2>
+                        </div>
+                    )}
+
+                    {/* THE TRACK */}
                     <div
                         ref={sectionRef}
-                        className="flex flex-nowrap h-full items-center pr-[10vw] z-[70] pt-[24vh]"
-                        style={{ paddingLeft: `calc(${leftPaneWidth} + ${horizontalGutter})` }}
+                        className="flex flex-nowrap h-full items-center z-[70] transition-all duration-300"
+                        style={{
+                            paddingLeft: horizontalGutter,
+                            paddingRight: '40vw' // Extra room for last card
+                        }}
                     >
                         {services.map((service, index) => {
                             const isActive = activeId === service.id;
@@ -182,66 +195,39 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                                 <div
                                     key={service.id}
                                     ref={el => cardsRef.current[index] = el}
-                                    className={`service-card h-[min(62vh,460px)] w-[min(32vw,360px)] min-w-[320px] shrink-0 rounded-[2.5rem] border p-8 flex flex-col justify-between transition-[background-color,border-color,box-shadow,transform,opacity] duration-350 relative overflow-hidden mr-10 will-change-transform ${isActive ? 'bg-[#3A3D91] border-[#3A3D91] shadow-[0_40px_100px_rgba(58,61,145,0.4)] scale-105 opacity-100' : 'bg-[#0A0A0E] border-white/5 scale-[0.92] opacity-30'}`}
+                                    className={`service-parent shrink-0 transition-all duration-500 mr-8 md:mr-16 ${isActive ? 'scale-105 opacity-100 z-50' : 'scale-[0.9] opacity-40 z-10'}`}
+                                    style={{
+                                        width: isMobile ? 'min(85vw, 320px)' : 'min(30vw, 360px)',
+                                        height: isMobile ? 'min(45vh, 320px)' : 'min(62vh, 460px)'
+                                    }}
                                 >
-                                    {/* Arrow Top Right */}
-                                    <div className="absolute top-8 right-8">
-                                        <ArrowUpRight className={`w-8 h-8 ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                                    <div className={`service-card-3d ${isActive ? 'active' : ''}`}>
+                                        <div className="service-logo">
+                                            <span className="circle circle1"></span>
+                                            <span className="circle circle2"></span>
+                                            <span className="circle circle3"></span>
+                                            <span className="circle circle4"></span>
+                                            <span className="circle circle5">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29.667 31.69" className="svg">
+                                                    <path d="M12.827,1.628A1.561,1.561,0,0,1,14.31,0h2.964a1.561,1.561,0,0,1,1.483,1.628v11.9a9.252,9.252,0,0,1-2.432,6.852q-2.432,2.409-6.963,2.409T2.4,20.452Q0,18.094,0,13.669V1.628A1.561,1.561,0,0,1,1.483,0h2.98A1.561,1.561,0,0,1,5.947,1.628V13.191a5.635,5.635,0,0,0,.85,3.451,3.153,3.153,0,0,0,2.632,1.094,3.032,3.032,0,0,0,2.582-1.076,5.836,5.836,0,0,0,.816-3.486Z" transform="translate(0 0)"></path>
+                                                    <path d="M75.207,20.857a1.561,1.561,0,0,1-1.483,1.628h-2.98a1.561,1.561,0,0,1-1.483-1.628V1.628A1.561,1.561,0,0,1,70.743,0h2.98a1.561,1.561,0,0,1,1.483,1.628Z" transform="translate(-45.91 0)"></path>
+                                                    <path d="M0,80.018A1.561,1.561,0,0,1,1.483,78.39h26.7a1.561,1.561,0,0,1,1.483,1.628v2.006a1.561,1.561,0,0,1-1.483,1.628H1.483A1.561,1.561,0,0,1,0,82.025Z" transform="translate(0 -51.963)"></path>
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        <div className="service-glass"></div>
+                                        <div className="service-content">
+                                            <span className="title uppercase tracking-tight text-xs sm:text-sm">{service.title}</span>
+                                            <span className="text text-[10px] sm:text-xs">{service.desc}</span>
+                                        </div>
+                                        <div className="service-bottom">
+                                            <div className="mt-4 md:mt-8">
+                                                <button className="luxe-button luxe-button-outline w-full py-2 md:py-4 text-[9px] md:text-[10px] tracking-[0.2em]">
+                                                    VIEW MORE
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    {isActive ? (
-                                        /* ACTIVE STATE CONTENT */
-                                        <>
-                                            <div className="flex flex-col gap-8">
-                                                <h3 className="text-3xl font-bold leading-tight text-white pr-12">{service.title}</h3>
-                                                <p className="text-white/70 text-sm font-light leading-relaxed max-w-[260px]">
-                                                    {service.desc}
-                                                </p>
-                                            </div>
-
-                                            <div className="flex justify-between items-end">
-                                                <div className="flex flex-col gap-4">
-                                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Services</span>
-                                                    <ul className="flex flex-col gap-1.5">
-                                                        {service.servicesList.map((item, i) => (
-                                                            <li key={i} className="text-white text-[11px] font-medium flex items-center gap-2">
-                                                                <CheckCircle2 className="w-3.5 h-3.5 text-white/30" />
-                                                                {item}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                                <div className="flex flex-col gap-4 items-end">
-                                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Tools</span>
-                                                    <div className="flex gap-2">
-                                                        {service.tools.slice(0, 4).map((tool, i) => (
-                                                            <div key={i} className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-[10px] font-bold text-white border border-white/5">
-                                                                {tool[0]}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        /* INACTIVE STATE CONTENT */
-                                        <>
-                                            <div className="text-7xl font-bold text-white/5 tracking-tighter">{service.number}</div>
-
-                                            <div className="flex flex-col gap-2 relative z-10">
-                                                <h3 className="text-2xl font-bold text-white pr-12">{service.title}</h3>
-                                            </div>
-
-                                            {/* Dotted Pattern Overlay (Bottom Right) */}
-                                            <div className="absolute bottom-8 right-8 opacity-20">
-                                                <div className="grid grid-cols-4 gap-2">
-                                                    {[...Array(16)].map((_, i) => (
-                                                        <div key={i} className="w-1 h-1 rounded-full bg-white/40" />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
                                 </div>
                             );
                         })}

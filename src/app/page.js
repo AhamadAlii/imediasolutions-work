@@ -7,6 +7,7 @@ import ParticleScene from '@/components/ParticleScene';
 import CaseStudies from '@/components/CaseStudies';
 import BrandsMarquee from '@/components/BrandsMarquee';
 import CTASection from '@/components/CTASection';
+import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -122,39 +123,39 @@ export default function Home() {
       >
         <div ref={heroContentRef} className="w-full max-w-7xl mx-auto">
           <div className="max-w-[640px]">
-          <h1
-            className="mb-8 mt-10 md:mt-16 font-bold tracking-tighter text-white leading-[0.92]"
-            style={{ textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
-          >
-            <span className="block text-[54px] sm:text-7xl md:text-8xl whitespace-nowrap">
-              <span className="hero-eye-word">EYE</span>{' '}
-              <span className="hero-media-word text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500 italic">MEDIA</span>
-            </span>
-          </h1>
+            <h1
+              className="luxe-display mb-8 mt-6 md:mt-16 font-semibold tracking-tight text-white leading-[1.1] md:leading-[0.92]"
+              style={{ textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+            >
+              <span className="flex flex-col md:block">
+                <span className="text-[48px] sm:text-7xl md:text-8xl lg:text-9xl hero-eye-word">EYE</span>{' '}
+                <span className="text-[48px] sm:text-7xl md:text-8xl lg:text-9xl hero-media-word text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500 italic">MEDIA</span>
+              </span>
+            </h1>
 
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-indigo-300 text-[10px] font-medium tracking-widest uppercase mb-8">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-            </span>
-            Innovation Driven Studio
-          </div>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/25 bg-indigo-500/12 text-indigo-200 text-[9px] sm:text-[10px] font-medium tracking-[0.18em] uppercase mb-8">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+              </span>
+              Innovation Driven Studio
+            </div>
 
-          <p
-            className="max-w-[620px] text-gray-200 text-lg md:text-xl font-normal mb-12 leading-relaxed"
-            style={{ textShadow: '0 4px 20px rgba(0,0,0,0.6)' }}
-          >
-            Eyemedia crafts high-fidelity digital experiences that bridge the gap between imagination and execution.
-          </p>
+            <p
+              className="max-w-[620px] text-gray-200/95 text-base sm:text-lg md:text-xl font-normal mb-10 md:mb-12 leading-relaxed"
+              style={{ textShadow: '0 4px 20px rgba(0,0,0,0.6)' }}
+            >
+              Eyemedia crafts high-fidelity digital experiences that bridge the gap between imagination and execution.
+            </p>
 
-          <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-            <button className="group relative px-8 py-4 bg-white text-black rounded-full font-bold text-xs tracking-widest hover:bg-indigo-50 transition-all duration-300">
-              EXPLORE OUR WORK
-            </button>
-            <button className="px-8 py-4 border border-white/10 rounded-full font-bold text-xs tracking-widest hover:bg-white/5 transition-all duration-300">
-              VIEW SERVICES
-            </button>
-          </div>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start">
+              <button className="luxe-button luxe-button-primary py-4 md:py-5 px-8 md:px-10 text-[10px] md:text-[11px]">
+                START A PROJECT
+              </button>
+              <button className="luxe-button luxe-button-outline py-4 md:py-5 px-8 md:px-10 text-[10px] md:text-[11px]">
+                OUR SERVICES
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -171,6 +172,7 @@ export default function Home() {
         <CaseStudies />
         <BrandsMarquee />
         <CTASection />
+        <ContactSection />
         <Footer />
       </div>
     </main>
