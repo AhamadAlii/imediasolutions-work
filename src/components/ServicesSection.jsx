@@ -73,7 +73,53 @@ const services = [
     },
 ];
 
-/* ─── Shared card UI ─── */
+/* ─── Mobile services list (web + app merged) ─── */
+const mobileServices = [
+    services[0], // video
+    services[1], // ai
+    services[2], // influencer
+    services[3], // event
+    {
+        id: 'web', // use 'web' shape for the merged card
+        number: '05',
+        title: 'Web & App Development',
+        desc: 'High-performance websites and robust mobile applications — built with modern frameworks for premium digital experiences.',
+        servicesList: ['Frontend Engineering', 'Custom CMS', 'E-commerce', 'Interactive WebGL', 'iOS & Android Native', 'React Native', 'UI/UX Mobile Design', 'Cloud Integration'],
+        tools: ['React', 'Next.js', 'Three.js', 'GSAP', 'Swift', 'Kotlin', 'Firebase', 'Expo'],
+        icon: <Code2 className="w-8 h-8" />
+    },
+    services[5], // social
+];
+
+/* ─── Detailed content for each service popup ─── */
+const serviceDetails = {
+    video: {
+        description: 'Our video production team delivers cinema-quality content that tells your brand story. From concept development through post-production — we handle every stage with meticulous attention.',
+        features: ['Cinematic Brand Films', 'Social Media Reels & Shorts', 'Motion Graphics & Animations', 'Color Grading & Sound Design', 'YouTube Channel Management', 'Live Event Coverage'],
+    },
+    ai: {
+        description: 'Harness the power of artificial intelligence to create ads and content that feels personal, dynamic, and impossibly creative. We blend AI tools with human artistry.',
+        features: ['AI-Generated Video Ads', 'Deepfake-Free Digital Avatars', 'Generative Visual Effects', 'Voice Cloning & Synthesis', 'Personalized Ad Variants', 'AI Show Concepts & Pilots'],
+    },
+    influencer: {
+        description: 'We connect your brand with authentic voices that resonate. Our approach prioritizes genuine partnerships over vanity metrics, driving real engagement and ROI.',
+        features: ['Creator Discovery & Vetting', 'Campaign Strategy & Briefs', 'Contract & Rights Management', 'Performance Analytics & ROI', 'Long-Term Ambassador Programs', 'UGC Content Amplification'],
+    },
+    event: {
+        description: 'From intimate brand activations to large-scale conferences, we design and execute events that leave lasting impressions. Every detail is planned for maximum impact.',
+        features: ['Corporate Conferences', 'Product Launch Events', 'Brand Activations & Pop-ups', 'Virtual & Hybrid Events', 'Technical Production', 'Post-Event Analytics'],
+    },
+    web: {
+        description: 'We build high-performance websites and robust mobile applications that serve as the cornerstone of your digital presence. From custom web apps to native iOS and Android — engineered for speed, accessibility, and conversion.',
+        features: ['Custom Web Applications', 'E-Commerce Platforms', 'Interactive 3D Experiences', 'iOS & Android Native Apps', 'Cross-Platform (React Native)', 'Progressive Web Apps', 'Backend & API Development', 'App Store Optimization'],
+    },
+    social: {
+        description: 'Our social media strategies are built on data, powered by creativity, and measured by results. We grow communities that become loyal brand advocates.',
+        features: ['Content Strategy & Calendars', 'Community Management', 'Paid Social Advertising', 'Trend Monitoring & Response', 'Analytics & Reporting', 'Platform-Specific Optimization'],
+    },
+};
+
+/* ─── Shared card UI (Desktop only) ─── */
 const ServiceCard = React.forwardRef(({ service, isActive, isMobile }, ref) => (
     <div
         ref={ref}
@@ -120,113 +166,55 @@ const ServiceCard = React.forwardRef(({ service, isActive, isMobile }, ref) => (
 ));
 ServiceCard.displayName = 'ServiceCard';
 
-/* ─── MOBILE: pinned 40/60 split with GSAP card cycling ─── */
-const MobileServices = ({ onServiceChange, activeId }) => {
-    const triggerRef = useRef(null);
-    const lastActiveRef = useRef(0);
-    const [activeIndex, setActiveIndex] = useState(0);
-    const [expandedId, setExpandedId] = useState(null);
-    const totalCards = services.length;
+/* ─── Single Mobile Service Section ─── */
+const MobileServiceSection = ({ service, index, total, onServiceChange, isExpanded, onExpand, onCollapse }) => {
+    const sectionRef = useRef(null);
+    const details = serviceDetails[service.id];
 
-    // GSAP ScrollTrigger: pin section and cycle through cards
+    // ScrollTrigger: set shape on enter, scatter on leave
     useEffect(() => {
-        if (!triggerRef.current) return;
+        if (!sectionRef.current) return;
 
-        const trigger = ScrollTrigger.create({
-            trigger: triggerRef.current,
-            start: 'top top',
-            end: () => `+=${window.innerHeight * (totalCards - 1) * 0.75}`,
-            pin: true,
-            scrub: true,
-            anticipatePin: 1,
-            onUpdate: (self) => {
-                const progress = self.progress;
-                const idx = Math.min(
-                    Math.floor(progress * totalCards),
-                    totalCards - 1
-                );
-                if (idx !== lastActiveRef.current) {
-                    lastActiveRef.current = idx;
-                    setActiveIndex(idx);
-                    setExpandedId(null); // auto-close popup on card change
-                    onServiceChange(services[idx].id);
-                }
+        const triggers = [];
+
+        // When this section enters the viewport center area, show its shape
+        triggers.push(ScrollTrigger.create({
+            trigger: sectionRef.current,
+            start: 'top 60%',
+            end: 'bottom 40%',
+            onEnter: () => {
+                onCollapse(); // close any expanded card
+                onServiceChange(service.id);
             },
-            onEnter: () => onServiceChange(services[0].id),
-            onLeave: () => onServiceChange(services[totalCards - 1].id),
-            onLeaveBack: () => onServiceChange('hero'),
-        });
+            onEnterBack: () => {
+                onCollapse();
+                onServiceChange(service.id);
+            },
+            onLeave: () => onServiceChange('scattered'),
+            onLeaveBack: () => onServiceChange('scattered'),
+        }));
 
-        return () => trigger.kill();
-    }, [onServiceChange, totalCards]);
-
-    const handleExpand = (serviceId) => {
-        setExpandedId(serviceId);
-        onServiceChange('scattered');
-    };
-
-    const handleCollapse = (serviceId) => {
-        setExpandedId(null);
-        onServiceChange(serviceId);
-    };
-
-    const serviceDetails = {
-        video: {
-            description: 'Our video production team delivers cinema-quality content that tells your brand story. From concept development through post-production — we handle every stage with meticulous attention.',
-            features: ['Cinematic Brand Films', 'Social Media Reels & Shorts', 'Motion Graphics & Animations', 'Color Grading & Sound Design', 'YouTube Channel Management', 'Live Event Coverage'],
-        },
-        ai: {
-            description: 'Harness the power of artificial intelligence to create ads and content that feels personal, dynamic, and impossibly creative. We blend AI tools with human artistry.',
-            features: ['AI-Generated Video Ads', 'Deepfake-Free Digital Avatars', 'Generative Visual Effects', 'Voice Cloning & Synthesis', 'Personalized Ad Variants', 'AI Show Concepts & Pilots'],
-        },
-        influencer: {
-            description: 'We connect your brand with authentic voices that resonate. Our approach prioritizes genuine partnerships over vanity metrics, driving real engagement and ROI.',
-            features: ['Creator Discovery & Vetting', 'Campaign Strategy & Briefs', 'Contract & Rights Management', 'Performance Analytics & ROI', 'Long-Term Ambassador Programs', 'UGC Content Amplification'],
-        },
-        event: {
-            description: 'From intimate brand activations to large-scale conferences, we design and execute events that leave lasting impressions. Every detail is planned for maximum impact.',
-            features: ['Corporate Conferences', 'Product Launch Events', 'Brand Activations & Pop-ups', 'Virtual & Hybrid Events', 'Technical Production', 'Post-Event Analytics'],
-        },
-        web: {
-            description: 'We build high-performance, visually stunning websites as the cornerstone of your digital presence. Engineered for speed, accessibility, and conversion.',
-            features: ['Custom Web Applications', 'E-Commerce Platforms', 'Interactive 3D Experiences', 'Progressive Web Apps', 'CMS Integration & Dashboards', 'Performance Optimization & SEO'],
-        },
-        social: {
-            description: 'Our social media strategies are built on data, powered by creativity, and measured by results. We grow communities that become loyal brand advocates.',
-            features: ['Content Strategy & Calendars', 'Community Management', 'Paid Social Advertising', 'Trend Monitoring & Response', 'Analytics & Reporting', 'Platform-Specific Optimization'],
-        },
-        app: {
-            description: 'We design and develop mobile applications that users love. From native iOS and Android to cross-platform solutions, we build apps that scale.',
-            features: ['iOS & Android Native Apps', 'Cross-Platform (React Native)', 'UI/UX Design & Prototyping', 'Backend & API Development', 'App Store Optimization', 'Ongoing Maintenance & Updates'],
-        },
-    };
-
-    const currentService = services[activeIndex];
-    const isExpanded = expandedId === currentService.id;
-    const details = serviceDetails[currentService.id];
+        return () => triggers.forEach(t => t.kill());
+    }, [service.id, onServiceChange, onCollapse]);
 
     return (
-        <section ref={triggerRef} className="relative bg-black h-screen flex flex-col overflow-hidden">
-            {/* ─── Header ─── */}
-            <div className="flex items-center justify-center pt-6 pb-2 shrink-0 z-10">
-                <h2 className="luxe-display text-2xl font-bold tracking-tight text-white uppercase leading-none">
-                    Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Services</span>
-                </h2>
-            </div>
+        <section
+            ref={sectionRef}
+            className="relative min-h-screen flex flex-col bg-black"
+        >
+            {/* ─── Top: shape area (particles render here via clipPath) ─── */}
+            <div className="flex-none" style={{ height: '42vh' }} />
 
-            {/* ─── Top 35%: shape area (particles render here via clipPath) ─── */}
-            <div className="flex-none" style={{ height: '35%' }} />
-
-            {/* ─── Bottom ~60%: single card ─── */}
+            {/* ─── Bottom: card area ─── */}
             <div className="flex-1 flex flex-col items-center justify-start px-4 relative z-10">
                 {/* Card counter */}
                 <div className="text-indigo-400/60 text-[10px] font-mono tracking-widest mb-3">
-                    {String(activeIndex + 1).padStart(2, '0')} / {String(totalCards).padStart(2, '0')}
+                    {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
                 </div>
 
-                {/* ─── Small Card (original 3D UI) ─── */}
+                {/* ─── Collapsed Card (original 3D UI) ─── */}
                 <div
-                    className={`transition-all duration-500 w-full max-w-xs ${isExpanded ? 'opacity-0 scale-95 h-0 overflow-hidden' : 'opacity-100 scale-100'}`}
+                    className={`transition-all duration-500 w-full max-w-xs ${isExpanded ? 'opacity-0 scale-95 h-0 overflow-hidden pointer-events-none' : 'opacity-100 scale-100'}`}
                     style={{ minHeight: isExpanded ? 0 : '260px', willChange: 'transform', backfaceVisibility: 'hidden' }}
                 >
                     <div className="service-card-3d active">
@@ -245,14 +233,14 @@ const MobileServices = ({ onServiceChange, activeId }) => {
                         </div>
                         <div className="service-glass"></div>
                         <div className="service-content">
-                            <span className="title uppercase tracking-tight text-xs sm:text-sm">{currentService.title}</span>
-                            <span className="text text-[10px] sm:text-xs line-clamp-2">{currentService.desc}</span>
+                            <span className="title uppercase tracking-tight text-xs sm:text-sm">{service.title}</span>
+                            <span className="text text-[10px] sm:text-xs line-clamp-2">{service.desc}</span>
                         </div>
                         <div className="service-bottom">
                             <div className="mt-4 w-full">
                                 <button
                                     className="luxe-button luxe-button-outline w-full py-2 text-[9px] tracking-[0.2em]"
-                                    onClick={() => handleExpand(currentService.id)}
+                                    onClick={() => onExpand(service.id)}
                                 >
                                     VIEW MORE
                                 </button>
@@ -261,16 +249,16 @@ const MobileServices = ({ onServiceChange, activeId }) => {
                     </div>
                 </div>
 
-                {/* ─── Expanded Popup Card ─── */}
-                <div className={`transition-all duration-500 origin-top w-full max-w-xs ${isExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-95 h-0 overflow-hidden'}`}>
+                {/* ─── Expanded Card (full details) ─── */}
+                <div className={`transition-all duration-500 origin-top w-full max-w-sm ${isExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-95 h-0 overflow-hidden pointer-events-none'}`}>
                     <div className="relative rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-900/50 via-blue-900/30 to-black/80 backdrop-blur-xl p-5 shadow-2xl shadow-indigo-500/10">
                         <div className="flex items-center gap-3 mb-3">
                             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white">
-                                {currentService.icon}
+                                {service.icon}
                             </div>
                             <div>
-                                <span className="text-indigo-400 text-[9px] font-semibold tracking-wider">{currentService.number}</span>
-                                <h3 className="text-sm font-bold text-white uppercase tracking-tight leading-tight">{currentService.title}</h3>
+                                <span className="text-indigo-400 text-[9px] font-semibold tracking-wider">{service.number}</span>
+                                <h3 className="text-sm font-bold text-white uppercase tracking-tight leading-tight">{service.title}</h3>
                             </div>
                         </div>
                         <p className="text-gray-300/90 text-[11px] leading-relaxed mb-4">{details.description}</p>
@@ -288,7 +276,7 @@ const MobileServices = ({ onServiceChange, activeId }) => {
                         <div className="mb-4">
                             <h4 className="text-[9px] font-semibold text-indigo-300 uppercase tracking-wider mb-2">Tools & Stack</h4>
                             <div className="flex flex-wrap gap-1.5">
-                                {currentService.tools.map((tool, i) => (
+                                {service.tools.map((tool, i) => (
                                     <span key={i} className="px-2.5 py-0.5 rounded-full text-[9px] font-medium bg-white/5 border border-white/10 text-gray-300">
                                         {tool}
                                     </span>
@@ -297,7 +285,7 @@ const MobileServices = ({ onServiceChange, activeId }) => {
                         </div>
                         <button
                             className="luxe-button luxe-button-primary w-full py-2.5 text-[9px] tracking-[0.2em]"
-                            onClick={() => handleCollapse(currentService.id)}
+                            onClick={onCollapse}
                         >
                             VIEW LESS
                         </button>
@@ -305,6 +293,47 @@ const MobileServices = ({ onServiceChange, activeId }) => {
                 </div>
             </div>
         </section>
+    );
+};
+
+/* ─── MOBILE: separate full-screen sections per service ─── */
+const MobileServices = ({ onServiceChange, activeId }) => {
+    const [expandedId, setExpandedId] = useState(null);
+
+    const handleExpand = (serviceId) => {
+        setExpandedId(serviceId);
+        onServiceChange('scattered');
+    };
+
+    const handleCollapse = () => {
+        const prevId = expandedId;
+        setExpandedId(null);
+        // Restore the shape for whichever section is currently in view
+        if (prevId) onServiceChange(prevId);
+    };
+
+    return (
+        <div className="bg-black">
+            {/* Section Heading */}
+            <div className="flex items-center justify-center pt-10 pb-4 sticky top-0 z-20 bg-gradient-to-b from-black via-black/95 to-transparent">
+                <h2 className="luxe-display text-2xl font-bold tracking-tight text-white uppercase leading-none">
+                    Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Services</span>
+                </h2>
+            </div>
+
+            {mobileServices.map((service, index) => (
+                <MobileServiceSection
+                    key={service.id}
+                    service={service}
+                    index={index}
+                    total={mobileServices.length}
+                    onServiceChange={onServiceChange}
+                    isExpanded={expandedId === service.id}
+                    onExpand={handleExpand}
+                    onCollapse={handleCollapse}
+                />
+            ))}
+        </div>
     );
 };
 
