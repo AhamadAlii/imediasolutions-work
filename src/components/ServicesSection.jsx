@@ -112,15 +112,15 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                     trigger: triggerEl,
                     start: 'top top',
                     end: () => `+=${window.innerHeight * (totalCards - 1) * (isMobile ? 0.8 : 1.1)}`,
-                    scrub: isMobile ? true : 1.0, // Instant finger tracking on mobile
+                    scrub: isMobile ? 0.6 : 1.2, // Smoother interpolation (seconds of lag)
                     pin: true,
                     anticipatePin: 1,
                     invalidateOnRefresh: true,
                     snap: {
                         snapTo: 1 / (totalCards - 1),
-                        duration: { min: 0.3, max: 0.8 },
-                        delay: 0,
-                        ease: isMobile ? "none" : 'power2.inOut',
+                        duration: { min: 0.4, max: 0.9 }, // Slightly slower snapping
+                        delay: 0.05, // Tiny delay before snap kicks in
+                        ease: 'power2.out', // Smoother arrival
                     },
                     onUpdate: (self) => {
                         const index = Math.min(Math.round(self.progress * (totalCards - 1)), totalCards - 1);
