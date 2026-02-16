@@ -106,7 +106,7 @@ export default function Home() {
       trigger: '#services-section',
       start: 'top bottom',
       onEnter: () => setActiveService('video'),
-      onEnterBack: () => setActiveService('video'),
+      onEnterBack: () => setActiveService('app'),
     }));
 
     // 4. Hide navbar during services
@@ -141,7 +141,7 @@ export default function Home() {
   // Desktop: Top 10% is header. Left 40% starts at 10% height -> inset(10% 60% 0 0)
   // Mobile/Tab: 0-15% title, 15-50% shape, 50-100% cards.
   // Shape zone is 15% to 50% -> inset(15% 0 50% 0)
-  let currentClipPath = 'none';
+  let currentClipPath = 'inset(0 0 0 0)';
   if (activeService !== 'hero') {
     currentClipPath = isMobile ? 'inset(15% 0 50% 0)' : 'inset(10% 60% 0 0)';
   }

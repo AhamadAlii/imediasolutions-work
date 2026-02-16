@@ -3,13 +3,40 @@ import { useMemo, useCallback } from 'react';
 export const useParticleMorph = (particlesCount = 25000) => {
     const positions = useMemo(() => {
         const pos = new Float32Array(particlesCount * 3);
+        // Initialize as the hero eye shape so it's visible on first render
+        const eyeScaleX = 1.68;
+        const eyeScaleY = 1.56;
+        const j = (s) => (Math.random() - 0.5) * s;
         for (let i = 0; i < particlesCount; i++) {
-            const phi = Math.acos(-1 + (2 * i) / particlesCount);
-            const theta = Math.sqrt(particlesCount * Math.PI) * phi;
-            const r = 1.2;
-            pos[i * 3 + 0] = r * Math.cos(theta) * Math.sin(phi);
-            pos[i * 3 + 1] = r * Math.sin(theta) * Math.sin(phi);
-            pos[i * 3 + 2] = r * Math.cos(phi);
+            const p = i / particlesCount;
+            if (p < 0.48) {
+                const t = (p / 0.48) * Math.PI * 2;
+                const x = 1.65 * Math.cos(t);
+                const y = 0.72 * Math.sin(t) * (1.0 - 0.25 * Math.cos(2.0 * t));
+                pos[i * 3 + 0] = (x + j(0.03)) * eyeScaleX;
+                pos[i * 3 + 1] = (y + j(0.03)) * eyeScaleY;
+                pos[i * 3 + 2] = j(0.05);
+            } else if (p < 0.76) {
+                const t = ((p - 0.48) / 0.28) * Math.PI * 2;
+                const r = 0.46 + j(0.04);
+                pos[i * 3 + 0] = (Math.cos(t) * r + j(0.02)) * eyeScaleX;
+                pos[i * 3 + 1] = (Math.sin(t) * r + j(0.02)) * eyeScaleY;
+                pos[i * 3 + 2] = j(0.04);
+            } else if (p < 0.9) {
+                const t = Math.random() * Math.PI * 2;
+                const r = Math.sqrt(Math.random()) * 0.18;
+                pos[i * 3 + 0] = (Math.cos(t) * r + j(0.015)) * eyeScaleX;
+                pos[i * 3 + 1] = (Math.sin(t) * r + j(0.015)) * eyeScaleY;
+                pos[i * 3 + 2] = j(0.03);
+            } else {
+                const t = Math.random();
+                const side = i % 2 === 0 ? 1 : -1;
+                const x = -1.2 + t * 2.4;
+                const y = side * (0.22 + 0.12 * Math.cos((x / 1.2) * Math.PI));
+                pos[i * 3 + 0] = (x + j(0.02)) * eyeScaleX;
+                pos[i * 3 + 1] = (y + j(0.02)) * eyeScaleY;
+                pos[i * 3 + 2] = j(0.04);
+            }
         }
         return pos;
     }, [particlesCount]);

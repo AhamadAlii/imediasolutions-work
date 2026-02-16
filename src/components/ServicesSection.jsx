@@ -94,20 +94,22 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
             const sectionEl = sectionRef.current;
             if (!triggerEl || !sectionEl) return;
 
+            // Get the container that holds the track (the overflow container)
+            const container = sectionEl.parentElement;
+
             gsap.to(sectionEl, {
                 x: () => {
-                    const track = sectionEl;
-                    const cards = cardsRef.current;
-                    if (!track || !cards[0]) return 0;
-                    const lastCard = cards[cards.length - 1];
-                    return -(lastCard.offsetLeft - cards[0].offsetLeft);
+                    if (!container || !sectionEl) return 0;
+                    // Total scrollable distance = track width - visible container width
+                    const scrollDist = sectionEl.scrollWidth - container.clientWidth;
+                    return -scrollDist;
                 },
-                ease: 'none', // 🔑 removes lag
+                ease: 'none',
                 scrollTrigger: {
                     trigger: triggerEl,
                     start: 'top top',
                     end: () => `+=${window.innerHeight * (totalCards - 1) * 0.75}`,
-                    scrub: true, // 🔑 1:1 mapping
+                    scrub: true,
                     pin: true,
                     anticipatePin: 1,
                     invalidateOnRefresh: true,
@@ -123,6 +125,7 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                         }
                     },
                     onEnter: () => onServiceChange(services[0].id),
+                    onLeave: () => onServiceChange(services[totalCards - 1].id),
                     onLeaveBack: () => onServiceChange('hero'),
                 },
             });

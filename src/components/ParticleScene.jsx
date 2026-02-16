@@ -289,6 +289,13 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
         };
     }, []);
 
+    // Force initial render frame on mount
+    useEffect(() => {
+        // Small delay to ensure geometry and attributes are ready after hydration
+        const timer = setTimeout(() => invalidate(), 50);
+        return () => clearTimeout(timer);
+    }, [invalidate]);
+
     useEffect(() => {
         if (!meshRef.current) return;
         const geometry = meshRef.current.geometry;
