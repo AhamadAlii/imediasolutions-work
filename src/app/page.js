@@ -123,14 +123,13 @@ export default function Home() {
     <main className="relative min-h-screen bg-black text-white">
       <Navbar hidden={hideNavbar} />
 
-      {/* Background Particles Stage */}
       <div
         className={`fixed inset-0 pointer-events-none transition-all duration-700 ${activeService === 'hero' ? 'z-10' : 'z-[110]'}`}
         style={{
           clipPath: currentClipPath
         }}
       >
-        <ParticleScene activeService={activeService} particleShift={particleShiftRef} />
+        <ParticleScene activeService={activeService} particleShift={particleShiftRef} isMobile={isMobile} />
       </div>
 
       {/* Hero Section */}

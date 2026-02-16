@@ -157,12 +157,13 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                     }}
                 >
                     {/* The 3D Shape from page.js will be rendered via dynamic mask logic behind this transparent zone */}
-                    <div className="absolute inset-0 flex items-center justify-center p-8 pointer-events-none">
-                        <div className={`w-full h-full rounded-3xl border border-white/5 flex flex-col items-center justify-center text-center ${isMobile ? 'bg-indigo-500/[0.02] backdrop-blur-[2px]' : 'bg-indigo-500/5 backdrop-blur-3xl'}`}>
-                            <h2 className="luxe-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white uppercase px-4">
-                                Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Services</span>
+                    <div className={`absolute inset-0 flex pointer-events-none ${isMobile ? 'items-center justify-center' : 'items-start pt-[12vh] justify-center'}`}>
+                        <div className={`w-full rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center transition-all duration-700 ${isMobile ? 'h-full bg-indigo-500/[0.02] backdrop-blur-[2px] p-8' : 'h-auto py-12 px-8 bg-black/40 backdrop-blur-xl max-w-[85%]'}`}>
+                            <h2 className="luxe-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white uppercase px-4 leading-none">
+                                Our <br className="hidden md:block" />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Services</span>
                             </h2>
-                            <p className="max-w-[340px] text-[10px] md:text-xs text-gray-300/80 font-light mt-4 leading-relaxed px-6">
+                            <p className="max-w-[280px] text-[10px] md:text-xs text-gray-300/80 font-light mt-6 leading-relaxed px-4">
                                 Professional digital solutions designed for the modern era.
                             </p>
                         </div>

@@ -241,7 +241,7 @@ const CircuitBackground = ({ count = 1200 }) => {
     );
 };
 
-const Particles = ({ activeService, particleShiftRef, particleCount, perfTier }) => {
+const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, isMobile }) => {
     const meshRef = useRef();
     const currentShapeRef = useRef(null);
     const morphTweenRef = useRef(null);
@@ -364,11 +364,23 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier })
 
         if (meshRef.current) {
             const shiftAmount = particleShiftRef.current.x;
-            const heroBiasX = activeService === 'hero' ? viewport.width * 0.24 : 0;
-            const targetX = heroBiasX - viewport.width * 0.3 * shiftAmount;
-            meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
-            const targetY = -(viewport.height * 0.125) * shiftAmount;
-            meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
+
+            if (isMobile && activeService !== 'hero') {
+                // Mobile stacked layout: Center in top 40%
+                // Viewport center is 0.5. Top 40% center is 0.2.
+                // Shift UP by 0.3 viewport heights.
+                const targetX = 0;
+                meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
+                const targetY = viewport.height * 0.3;
+                meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
+            } else {
+                // Desktop or Hero view
+                const heroBiasX = activeService === 'hero' ? viewport.width * 0.24 : 0;
+                const targetX = heroBiasX - viewport.width * 0.3 * shiftAmount;
+                meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
+                const targetY = -(viewport.height * 0.125) * shiftAmount;
+                meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
+            }
 
             if (activeService === 'hero') {
                 const pulse = 1 + Math.sin(clock.getElapsedTime() * 1.2) * 0.018;
@@ -380,8 +392,9 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier })
                     0.08
                 );
             } else {
-                meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, 1, 0.1);
-                meshRef.current.scale.y = THREE.MathUtils.lerp(meshRef.current.scale.y, 1, 0.1);
+                const targetScale = isMobile ? 0.75 : 1;
+                meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, targetScale, 0.1);
+                meshRef.current.scale.y = THREE.MathUtils.lerp(meshRef.current.scale.y, targetScale, 0.1);
                 meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.1);
             }
         }
@@ -451,15 +464,15 @@ const CameraRig = () => {
     return null;
 };
 
-const ParticleScene = ({ activeService, particleShift }) => {
+const ParticleScene = ({ activeService, particleShift, isMobile }) => {
     const perfTier = useMemo(() => {
         if (typeof window === 'undefined') return 'medium';
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const cores = navigator.hardwareConcurrency || 4;
         const memory = navigator.deviceMemory || 4;
-        const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        const isDeviceMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-        if (reducedMotion || isMobile || cores <= 4 || memory <= 4) {
+        if (reducedMotion || isDeviceMobile || cores <= 4 || memory <= 4) {
             return 'low';
         }
 
@@ -492,6 +505,7 @@ const ParticleScene = ({ activeService, particleShift }) => {
                     particleShiftRef={particleShift}
                     particleCount={particleCount}
                     perfTier={perfTier}
+                    isMobile={isMobile}
                 />
 
                 {perfTier !== 'low' ? (
@@ -512,4 +526,3 @@ const ParticleScene = ({ activeService, particleShift }) => {
 };
 
 export default ParticleScene;
-
