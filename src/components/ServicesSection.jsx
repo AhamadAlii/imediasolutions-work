@@ -235,7 +235,6 @@ const MobileServiceSection = ({ service, index, total, onServiceChange, isExpand
                         <div className="service-glass"></div>
                         <div className="service-content">
                             <span className="title uppercase tracking-tight text-xs sm:text-sm">{service.title}</span>
-                            <span className="text text-[10px] sm:text-xs line-clamp-2">{service.desc}</span>
                         </div>
                         <div className="service-bottom">
                             <div className="mt-4 w-full">
