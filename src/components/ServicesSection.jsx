@@ -115,10 +115,24 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                     invalidateOnRefresh: true,
                     fastScrollEnd: true,
                     preventOverlapping: true,
-                    onUpdate: (self) => {
-                        const rawIndex = self.progress * (totalCards - 1);
-                        const index = Math.min(Math.round(rawIndex), totalCards - 1);
-                        const currentId = services[index].id;
+                    onUpdate: () => {
+                        // Position-based: find which card is closest to the visible area
+                        const scrollX = -gsap.getProperty(sectionEl, 'x');
+                        const cards = cardsRef.current;
+                        // The "active zone" is near the start of visible area
+                        const activePoint = scrollX + (container ? container.clientWidth * 0.3 : 0);
+                        let closestIndex = 0;
+                        let minDist = Infinity;
+                        for (let i = 0; i < cards.length; i++) {
+                            if (!cards[i]) continue;
+                            const cardCenter = cards[i].offsetLeft + cards[i].offsetWidth / 2;
+                            const dist = Math.abs(cardCenter - activePoint);
+                            if (dist < minDist) {
+                                minDist = dist;
+                                closestIndex = i;
+                            }
+                        }
+                        const currentId = services[closestIndex].id;
                         if (currentId !== lastActiveRef.current) {
                             lastActiveRef.current = currentId;
                             onServiceChange(currentId);
