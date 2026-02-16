@@ -362,7 +362,8 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
             event: 0.45,
             web: 0.58,
             social: 0.7,
-            app: 0.84
+            app: 0.84,
+            scattered: 0.84
         };
         const targetHue = hueMap[activeService] ?? 0;
         const oldHue = uniforms.uHueShift.value;
@@ -371,7 +372,10 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
 
         const scroll = scrollProgressRef.current;
         const oldExpansion = uniforms.uExpansion.value;
-        if (activeService === 'hero') {
+        if (activeService === 'scattered') {
+            // Drive expansion to 1.0 — shader will shrink & fade particles
+            uniforms.uExpansion.value = THREE.MathUtils.lerp(uniforms.uExpansion.value, 1.0, 0.06);
+        } else if (activeService === 'hero') {
             uniforms.uExpansion.value = THREE.MathUtils.lerp(uniforms.uExpansion.value, Math.min(scroll * 1.5, 1.0), 0.1);
         } else {
             uniforms.uExpansion.value = THREE.MathUtils.lerp(uniforms.uExpansion.value, 0, 0.1);
@@ -383,7 +387,11 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
             const oldX = meshRef.current.position.x;
             const oldY = meshRef.current.position.y;
 
-            if (isMobile && activeService !== 'hero') {
+            if (activeService === 'scattered') {
+                // Keep position centered while scattering
+                meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, 0, 0.05);
+                meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, 0, 0.05);
+            } else if (isMobile && activeService !== 'hero') {
                 const targetX = 0;
                 meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
                 const targetY = viewport.height * 0.175;
@@ -413,6 +421,11 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
                     0.08
                 );
                 invalidate(); // Pulse is continuous
+            } else if (activeService === 'scattered') {
+                meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, 1, 0.05);
+                meshRef.current.scale.y = THREE.MathUtils.lerp(meshRef.current.scale.y, 1, 0.05);
+                meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.05);
+                invalidate(); // Keep animating until fully scattered
             } else {
                 const targetScale = isMobile ? 0.65 : 1;
                 meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, targetScale, 0.1);
@@ -531,7 +544,7 @@ const ParticleScene = ({ activeService, particleShift, isMobile }) => {
     }, []);
 
     return (
-        <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 z-0 pointer-events-none">
             <Canvas
                 camera={{ position: [0, 0, 4], fov: 75 }}
                 gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}

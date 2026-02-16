@@ -109,14 +109,14 @@ export default function Home() {
       onEnterBack: () => setActiveService('app'),
     }));
 
-    // 4. Hide navbar during services
+    // 4. Hide navbar during services & control particle visibility
     triggers.push(ScrollTrigger.create({
       trigger: '#services-section',
       start: 'top top',
       end: 'bottom top',
       onEnter: () => setHideNavbar(true),
-      onLeave: () => setHideNavbar(false),
-      onEnterBack: () => setHideNavbar(true),
+      onLeave: () => { setHideNavbar(false); setActiveService('scattered'); },
+      onEnterBack: () => { setHideNavbar(true); setActiveService('app'); },
       onLeaveBack: () => setHideNavbar(false),
     }));
 

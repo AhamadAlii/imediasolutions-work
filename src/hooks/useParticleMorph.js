@@ -292,6 +292,15 @@ export const useParticleMorph = (particlesCount = 25000) => {
                 }
                 break;
 
+            case 'scattered':
+                for (let i = 0; i < particlesCount; i++) {
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos(2 * Math.random() - 1);
+                    const r = 6 + Math.random() * 6; // far outward
+                    set(i, r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+                }
+                break;
+
             default:
                 for (let i = 0; i < particlesCount; i++) {
                     const phi = Math.acos(-1 + (2 * i) / particlesCount);

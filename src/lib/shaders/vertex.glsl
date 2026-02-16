@@ -4,6 +4,7 @@ varying float vAlpha;
 
 uniform float uTime;
 uniform float uProgress;
+uniform float uExpansion;
 uniform vec2 uMouse;
 uniform float uPixelRatio;
 uniform float uSize;
@@ -37,10 +38,11 @@ void main() {
 
     gl_Position = projectionPosition;
 
-    // Size calculation
-    gl_PointSize = uSize * aSize * uPixelRatio;
+    // Size calculation — shrink particles as they scatter
+    float expansionScale = 1.0 - uExpansion * 0.85;
+    gl_PointSize = uSize * aSize * uPixelRatio * expansionScale;
     gl_PointSize *= (1.0 / - viewPosition.z);
 
     vColor = mix(vec3(0.5, 0.2, 1.0), vec3(0.2, 0.5, 1.0), mixedPosition.y + 0.5);
-    vAlpha = (1.0 / - viewPosition.z) * 2.0;
+    vAlpha = (1.0 / - viewPosition.z) * 2.0 * (1.0 - uExpansion * 0.9);
 }
