@@ -19,6 +19,7 @@ uniform float uHueShift;
 attribute vec3 positionStart;
 attribute vec3 positionTarget;
 attribute float aSize;
+attribute float aPhase;
 
 varying vec3 vColor;
 varying float vAlpha;
@@ -32,7 +33,7 @@ void main() {
     vec3 dir = normalize(mixedPosition);
     mixedPosition += dir * uExpansion * (1.0 - vIsCore) * 2.0;
 
-    float shimmer = sin(uTime * 1.5 + aSize * 10.0) * 0.05;
+    float shimmer = sin(uTime * 1.5 + aPhase * 10.0) * 0.05;
     mixedPosition += vec3(shimmer, -shimmer, shimmer * 0.5);
 
     float noiseFreq = 0.4;
@@ -55,7 +56,7 @@ void main() {
     vec4 viewPosition = viewMatrix * modelPosition;
     gl_Position = projectionMatrix * viewPosition;
 
-    float sparkle = 0.92 + sin(uTime * 3.0 + aSize * 16.0) * 0.14;
+    float sparkle = 0.92 + sin(uTime * 3.0 + aPhase * 16.0) * 0.14;
     float corePulse = 1.0 + vIsCore * sin(uTime * 3.5) * 0.08;
     gl_PointSize = uSize * aSize * uPixelRatio * sparkle * corePulse;
     gl_PointSize *= (1.0 / - viewPosition.z);
@@ -246,8 +247,8 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
     const currentShapeRef = useRef(null);
     const morphTweenRef = useRef(null);
     const pointerRef = useRef({ x: 0, y: 0 });
-    const { viewport } = useThree();
-    const { positions, sizes, getShapePositions } = useParticleMorph(particleCount);
+    const { viewport, invalidate } = useThree();
+    const { positions, sizes, phases, getShapePositions } = useParticleMorph(particleCount);
     const scrollProgressRef = useRef(0);
 
     const uniforms = useMemo(() => ({
@@ -263,22 +264,24 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
     useEffect(() => {
         const updateScroll = () => {
             scrollProgressRef.current = window.scrollY / window.innerHeight;
+            invalidate();
         };
 
         updateScroll();
         window.addEventListener('scroll', updateScroll, { passive: true });
         return () => window.removeEventListener('scroll', updateScroll);
-    }, []);
+    }, [invalidate]);
 
     useEffect(() => {
         const updatePointer = (event) => {
             pointerRef.current.x = (event.clientX / window.innerWidth) * 2 - 1;
             pointerRef.current.y = -((event.clientY / window.innerHeight) * 2 - 1);
+            invalidate();
         };
 
         window.addEventListener('pointermove', updatePointer, { passive: true });
         return () => window.removeEventListener('pointermove', updatePointer);
-    }, []);
+    }, [invalidate]);
 
     useEffect(() => {
         return () => {
@@ -333,11 +336,13 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
             duration: 1.15,
             ease: 'power2.inOut',
             overwrite: true,
+            onUpdate: invalidate,
             onComplete: () => {
                 currentShapeRef.current = targetPos.slice(0);
+                invalidate();
             }
         });
-    }, [activeService, getShapePositions, particleCount, positions, uniforms]);
+    }, [activeService, getShapePositions, particleCount, positions, uniforms, invalidate]);
 
     useFrame((state) => {
         const { clock } = state;
@@ -353,34 +358,32 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
             app: 0.84
         };
         const targetHue = hueMap[activeService] ?? 0;
+        const oldHue = uniforms.uHueShift.value;
         uniforms.uHueShift.value = THREE.MathUtils.lerp(uniforms.uHueShift.value, targetHue, 0.08);
+        if (Math.abs(oldHue - targetHue) > 0.001) invalidate();
 
         const scroll = scrollProgressRef.current;
+        const oldExpansion = uniforms.uExpansion.value;
         if (activeService === 'hero') {
             uniforms.uExpansion.value = THREE.MathUtils.lerp(uniforms.uExpansion.value, Math.min(scroll * 1.5, 1.0), 0.1);
         } else {
             uniforms.uExpansion.value = THREE.MathUtils.lerp(uniforms.uExpansion.value, 0, 0.1);
         }
+        if (Math.abs(oldExpansion - uniforms.uExpansion.value) > 0.001) invalidate();
 
         if (meshRef.current) {
             const shiftAmount = particleShiftRef.current.x;
+            const oldX = meshRef.current.position.x;
+            const oldY = meshRef.current.position.y;
 
             if (isMobile && activeService !== 'hero') {
-                // Mobile stacked layout (BLUEPRINT): 15% Title | 35% Shape | 50% Card
-                // Shape zone is from 15% to 50% height. Center of shape zone is at 32.5% height.
-                // Standard center is 50%. So shift UP by 17.5% (0.175 viewport heights).
-                // Actually 0.5 - 0.325 = 0.175.
                 const targetX = 0;
                 meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
                 const targetY = viewport.height * 0.175;
                 meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
             } else {
-                // Desktop or Hero view
-                // Desktop BLUEPRINT: 10% Header | 90% (Shape 40% / Cards 60%)
-                // Shape zone height is 90% (starts at 10%). Center is at 55% height.
-                // Standard center is 50%. So shift DOWN by 5% (0.05 viewport heights).
                 const heroBiasX = activeService === 'hero' ? viewport.width * 0.24 : 0;
-                const shiftX = activeService === 'hero' ? 0.3 : 0.3; // Match 40/60 split
+                const shiftX = activeService === 'hero' ? 0.3 : 0.3;
                 const targetX = heroBiasX - viewport.width * shiftX * shiftAmount;
                 meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
 
@@ -388,6 +391,11 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
                 meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
             }
 
+            if (Math.abs(oldX - meshRef.current.position.x) > 0.001 || Math.abs(oldY - meshRef.current.position.y) > 0.001) {
+                invalidate();
+            }
+
+            const oldScaleX = meshRef.current.scale.x;
             if (activeService === 'hero') {
                 const pulse = 1 + Math.sin(clock.getElapsedTime() * 1.2) * 0.018;
                 meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, pulse, 0.08);
@@ -397,14 +405,13 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
                     Math.sin(clock.getElapsedTime() * 0.65) * 0.02,
                     0.08
                 );
+                invalidate(); // Pulse is continuous
             } else {
-                // COMPRESS SHAPE: Scale down to fit in smaller zones
-                // On mobile, height is only 35vh. Standard shape fits 100vh.
-                // On desktop, width is only 40vw.
                 const targetScale = isMobile ? 0.65 : 1;
                 meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, targetScale, 0.1);
                 meshRef.current.scale.y = THREE.MathUtils.lerp(meshRef.current.scale.y, targetScale, 0.1);
                 meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.1);
+                if (Math.abs(oldScaleX - targetScale) > 0.001) invalidate();
             }
         }
 
@@ -417,6 +424,7 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
             <bufferGeometry>
                 <bufferAttribute attach="attributes-position" count={particleCount} array={positions} itemSize={3} />
                 <bufferAttribute attach="attributes-aSize" count={particleCount} array={sizes} itemSize={1} />
+                <bufferAttribute attach="attributes-aPhase" count={particleCount} array={phases} itemSize={1} />
             </bufferGeometry>
             <shaderMaterial
                 blending={THREE.AdditiveBlending}
@@ -497,12 +505,31 @@ const ParticleScene = ({ activeService, particleShift, isMobile }) => {
     const galaxyCount = perfTier === 'high' ? 1000 : 700;
     const crystalCount = perfTier === 'high' ? 12 : 8;
 
+    const isScrolling = useRef(false);
+    const scrollTimeout = useRef(null);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            isScrolling.current = true;
+            if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+            scrollTimeout.current = setTimeout(() => {
+                isScrolling.current = false;
+            }, 100);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+        };
+    }, []);
+
     return (
         <div className="fixed inset-0 z-0 pointer-events-none">
             <Canvas
                 camera={{ position: [0, 0, 4], fov: 75 }}
                 gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
-                dpr={perfTier === 'high' ? [1, 1.25] : [1, 1]}
+                dpr={[1, 1.5]}
+                frameloop="demand"
             >
                 <CameraRig />
                 <BackgroundGalaxy count={galaxyCount} />
@@ -517,7 +544,7 @@ const ParticleScene = ({ activeService, particleShift, isMobile }) => {
                     isMobile={isMobile}
                 />
 
-                {perfTier !== 'low' ? (
+                {!isScrolling.current && perfTier !== 'low' ? (
                     <EffectComposer>
                         <Bloom
                             intensity={perfTier === 'high' ? 0.96 : 0.74}

@@ -22,6 +22,14 @@ export const useParticleMorph = (particlesCount = 25000) => {
         return s;
     }, [particlesCount]);
 
+    const phases = useMemo(() => {
+        const p = new Float32Array(particlesCount);
+        for (let i = 0; i < particlesCount; i++) {
+            p[i] = Math.random() * Math.PI * 2;
+        }
+        return p;
+    }, [particlesCount]);
+
     const getShapePositions = useCallback((shapeType) => {
         const pos = new Float32Array(particlesCount * 3);
         const set = (i, x, y, z = 0) => {
@@ -269,5 +277,5 @@ export const useParticleMorph = (particlesCount = 25000) => {
         return pos;
     }, [particlesCount]);
 
-    return { positions, sizes, getShapePositions };
+    return { positions, sizes, phases, getShapePositions };
 };

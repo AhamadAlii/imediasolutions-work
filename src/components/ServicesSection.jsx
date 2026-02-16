@@ -190,10 +190,11 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                     {/* THE TRACK */}
                     <div
                         ref={sectionRef}
-                        className="flex flex-nowrap h-full items-center z-[70] transition-all duration-300"
+                        className="flex flex-nowrap h-full items-center z-[70]"
                         style={{
                             paddingLeft: horizontalGutter,
-                            paddingRight: '60vw' // Room for last card
+                            paddingRight: '60vw', // Room for last card
+                            willChange: 'transform'
                         }}
                     >
                         {services.map((service, index) => {
@@ -205,7 +206,9 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                                     className={`service-parent shrink-0 transition-all duration-500 mr-8 md:mr-16 ${isActive ? 'scale-105 opacity-100 z-50' : 'scale-[0.9] opacity-40 z-10'}`}
                                     style={{
                                         width: isMobile ? 'min(80vw, 300px)' : 'min(28vw, 340px)',
-                                        height: isMobile ? 'min(40vh, 320px)' : 'min(62vh, 460px)'
+                                        height: isMobile ? 'min(40vh, 320px)' : 'min(62vh, 460px)',
+                                        willChange: 'transform',
+                                        backfaceVisibility: 'hidden'
                                     }}
                                 >
                                     <div className={`service-card-3d ${isActive ? 'active' : ''}`}>
