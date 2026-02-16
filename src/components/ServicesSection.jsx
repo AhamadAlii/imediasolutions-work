@@ -215,8 +215,8 @@ const MobileServiceSection = ({ service, index, total, onServiceChange, isExpand
 
                 {/* ─── Collapsed Card (original 3D UI) ─── */}
                 <div
-                    className={`transition-all duration-500 w-full max-w-xs ${isExpanded ? 'opacity-0 scale-95 h-0 overflow-hidden pointer-events-none' : 'opacity-100 scale-100'}`}
-                    style={{ minHeight: isExpanded ? 0 : '260px', willChange: 'transform', backfaceVisibility: 'hidden' }}
+                    className={`transition-all duration-500 w-full max-w-sm ${isExpanded ? 'opacity-0 scale-95 h-0 overflow-hidden pointer-events-none' : 'opacity-100 scale-100'}`}
+                    style={{ minHeight: isExpanded ? 0 : '340px', willChange: 'transform', backfaceVisibility: 'hidden' }}
                 >
                     <div className="service-card-3d active">
                         <div className="service-logo">
