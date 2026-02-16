@@ -110,7 +110,7 @@ export default function Home() {
         if (isMobile) setActiveService('scattered');
         else setActiveService('video');
       },
-      onEnterBack: () => setActiveService(isMobile ? 'social' : 'app'),
+      onEnterBack: () => setActiveService('app'),
     }));
 
     // 4. Hide navbar during services & control particle visibility
@@ -120,7 +120,7 @@ export default function Home() {
       end: 'bottom top',
       onEnter: () => setHideNavbar(true),
       onLeave: () => { setHideNavbar(false); setActiveService('scattered'); },
-      onEnterBack: () => { setHideNavbar(true); setActiveService(isMobile ? 'social' : 'app'); },
+      onEnterBack: () => { setHideNavbar(true); setActiveService('app'); },
       onLeaveBack: () => setHideNavbar(false),
     }));
 
@@ -141,10 +141,10 @@ export default function Home() {
     };
   }, []);
 
-  // Mobile: shape area is ~top 42% of each service section viewport
+  // Mobile: header ~8% + shape area ~38% = particles in top 46%. Bottom 54% is cards.
   let currentClipPath = 'inset(0 0 0 0)';
   if (activeService !== 'hero') {
-    currentClipPath = isMobile ? 'inset(0% 0 55% 0)' : 'inset(10% 60% 0 0)';
+    currentClipPath = isMobile ? 'inset(8% 0 54% 0)' : 'inset(10% 60% 0 0)';
   }
 
   return (
