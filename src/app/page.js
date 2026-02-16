@@ -18,8 +18,16 @@ export default function Home() {
   const [activeService, setActiveService] = useState('hero');
   const [hideNavbar, setHideNavbar] = useState(false);
   const [heroHidden, setHeroHidden] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const heroContentRef = useRef(null);
   const particleShiftRef = useRef({ x: 0 });
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (!heroContentRef.current) return;
@@ -103,6 +111,14 @@ export default function Home() {
     };
   }, []);
 
+  // CLIP PATH LOGIC:
+  // Desktop: Left 40% visible -> inset(0 60% 0 0)
+  // Mobile/Tab: Top 40% visible -> inset(0 0 60% 0)
+  let currentClipPath = 'inset(0 0 0 0)';
+  if (activeService !== 'hero') {
+    currentClipPath = isMobile ? 'inset(0 0 60% 0)' : 'inset(0 60% 0 0)';
+  }
+
   return (
     <main className="relative min-h-screen bg-black text-white">
       <Navbar hidden={hideNavbar} />
@@ -111,7 +127,7 @@ export default function Home() {
       <div
         className={`fixed inset-0 pointer-events-none transition-all duration-700 ${activeService === 'hero' ? 'z-10' : 'z-[110]'}`}
         style={{
-          clipPath: activeService === 'hero' ? 'inset(0 0 0 0)' : 'inset(0 60% 0 0)'
+          clipPath: currentClipPath
         }}
       >
         <ParticleScene activeService={activeService} particleShift={particleShiftRef} />
