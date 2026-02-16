@@ -112,13 +112,13 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                     trigger: triggerEl,
                     start: 'top top',
                     end: () => `+=${window.innerHeight * (totalCards - 1) * (isMobile ? 1.5 : 1.25)}`,
-                    scrub: isMobile ? 0.6 : 0.35,
+                    scrub: 1.5, // Increased significantly for "one-by-one" feel
                     pin: true,
                     anticipatePin: 1,
                     invalidateOnRefresh: true,
                     snap: {
                         snapTo: 1 / (totalCards - 1),
-                        duration: { min: 0.2, max: 0.5 },
+                        duration: { min: 0.3, max: 0.8 },
                         delay: 0,
                         ease: 'power2.inOut',
                     },

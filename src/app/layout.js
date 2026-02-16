@@ -22,13 +22,17 @@ export const metadata = {
   description: "Eyemedia is a premium digital agency crafting world-class experiences through video editing, AI ads, influencer marketing, and high-performance development.",
 };
 
+import SmoothScroll from "@/components/SmoothScroll";
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased`}
       >
-        {children}
+        <SmoothScroll>
+          {children}
+        </SmoothScroll>
       </body>
     </html>
   );
