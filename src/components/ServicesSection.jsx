@@ -120,196 +120,189 @@ const ServiceCard = React.forwardRef(({ service, isActive, isMobile }, ref) => (
 ));
 ServiceCard.displayName = 'ServiceCard';
 
-/* ─── MOBILE: vertical scroll with popup ─── */
+/* ─── MOBILE: pinned 40/60 split with GSAP card cycling ─── */
 const MobileServices = ({ onServiceChange, activeId }) => {
-    const mobileCardsRef = useRef([]);
-    const lastActiveRef = useRef(activeId);
+    const triggerRef = useRef(null);
+    const lastActiveRef = useRef(0);
+    const [activeIndex, setActiveIndex] = useState(0);
     const [expandedId, setExpandedId] = useState(null);
+    const totalCards = services.length;
 
-    // IntersectionObserver: activate cards as they scroll into view
+    // GSAP ScrollTrigger: pin section and cycle through cards
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        const id = entry.target.dataset.serviceId;
-                        if (id && id !== lastActiveRef.current) {
-                            lastActiveRef.current = id;
-                            // Auto-close popup when scrolling to a new card
-                            setExpandedId(null);
-                            onServiceChange(id);
-                        }
-                    }
-                });
-            },
-            { threshold: 0.5 }
-        );
+        if (!triggerRef.current) return;
 
-        mobileCardsRef.current.forEach((card) => {
-            if (card) observer.observe(card);
+        const trigger = ScrollTrigger.create({
+            trigger: triggerRef.current,
+            start: 'top top',
+            end: () => `+=${window.innerHeight * (totalCards - 1) * 0.75}`,
+            pin: true,
+            scrub: true,
+            anticipatePin: 1,
+            onUpdate: (self) => {
+                const progress = self.progress;
+                const idx = Math.min(
+                    Math.floor(progress * totalCards),
+                    totalCards - 1
+                );
+                if (idx !== lastActiveRef.current) {
+                    lastActiveRef.current = idx;
+                    setActiveIndex(idx);
+                    setExpandedId(null); // auto-close popup on card change
+                    onServiceChange(services[idx].id);
+                }
+            },
+            onEnter: () => onServiceChange(services[0].id),
+            onLeave: () => onServiceChange(services[totalCards - 1].id),
+            onLeaveBack: () => onServiceChange('hero'),
         });
 
-        return () => observer.disconnect();
-    }, [onServiceChange]);
+        return () => trigger.kill();
+    }, [onServiceChange, totalCards]);
 
     const handleExpand = (serviceId) => {
         setExpandedId(serviceId);
-        onServiceChange('scattered'); // scatter particles
+        onServiceChange('scattered');
     };
 
     const handleCollapse = (serviceId) => {
         setExpandedId(null);
-        onServiceChange(serviceId); // bring back shape
+        onServiceChange(serviceId);
     };
 
-    // Detailed content for each service popup
     const serviceDetails = {
         video: {
-            description: 'Our video production team delivers cinema-quality content that tells your brand story. From concept development and storyboarding through filming, editing, and post-production — we handle every stage with meticulous attention to detail.',
+            description: 'Our video production team delivers cinema-quality content that tells your brand story. From concept development through post-production — we handle every stage with meticulous attention.',
             features: ['Cinematic Brand Films', 'Social Media Reels & Shorts', 'Motion Graphics & Animations', 'Color Grading & Sound Design', 'YouTube Channel Management', 'Live Event Coverage'],
         },
         ai: {
-            description: 'Harness the power of artificial intelligence to create ads and show content that feels personal, dynamic, and impossibly creative. We blend cutting-edge AI tools with human artistry to push creative boundaries.',
+            description: 'Harness the power of artificial intelligence to create ads and content that feels personal, dynamic, and impossibly creative. We blend AI tools with human artistry.',
             features: ['AI-Generated Video Ads', 'Deepfake-Free Digital Avatars', 'Generative Visual Effects', 'Voice Cloning & Synthesis', 'Personalized Ad Variants', 'AI Show Concepts & Pilots'],
         },
         influencer: {
-            description: 'We connect your brand with authentic voices that resonate. Our influencer marketing approach prioritizes genuine partnerships over vanity metrics, driving real engagement and measurable ROI.',
+            description: 'We connect your brand with authentic voices that resonate. Our approach prioritizes genuine partnerships over vanity metrics, driving real engagement and ROI.',
             features: ['Creator Discovery & Vetting', 'Campaign Strategy & Briefs', 'Contract & Rights Management', 'Performance Analytics & ROI', 'Long-Term Ambassador Programs', 'UGC Content Amplification'],
         },
         event: {
-            description: 'From intimate brand activations to large-scale conferences, we design and execute events that leave lasting impressions. Every detail is meticulously planned for maximum impact.',
-            features: ['Corporate Conferences', 'Product Launch Events', 'Brand Activations & Pop-ups', 'Virtual & Hybrid Events', 'Technical Production', 'Post-Event Analytics & Reporting'],
+            description: 'From intimate brand activations to large-scale conferences, we design and execute events that leave lasting impressions. Every detail is planned for maximum impact.',
+            features: ['Corporate Conferences', 'Product Launch Events', 'Brand Activations & Pop-ups', 'Virtual & Hybrid Events', 'Technical Production', 'Post-Event Analytics'],
         },
         web: {
-            description: 'We build high-performance, visually stunning websites that serve as the cornerstone of your digital presence. Every site is engineered for speed, accessibility, and conversion.',
-            features: ['Custom Web Applications', 'E-Commerce Platforms', 'Interactive 3D Experiences', 'Progressive Web Apps (PWA)', 'CMS Integration & Custom Dashboards', 'Performance Optimization & SEO'],
+            description: 'We build high-performance, visually stunning websites as the cornerstone of your digital presence. Engineered for speed, accessibility, and conversion.',
+            features: ['Custom Web Applications', 'E-Commerce Platforms', 'Interactive 3D Experiences', 'Progressive Web Apps', 'CMS Integration & Dashboards', 'Performance Optimization & SEO'],
         },
         social: {
             description: 'Our social media strategies are built on data, powered by creativity, and measured by results. We grow communities that become loyal brand advocates.',
             features: ['Content Strategy & Calendars', 'Community Management', 'Paid Social Advertising', 'Trend Monitoring & Response', 'Analytics & Reporting', 'Platform-Specific Optimization'],
         },
         app: {
-            description: 'We design and develop mobile applications that users love. From native iOS and Android to cross-platform solutions, we build apps that scale with your business.',
+            description: 'We design and develop mobile applications that users love. From native iOS and Android to cross-platform solutions, we build apps that scale.',
             features: ['iOS & Android Native Apps', 'Cross-Platform (React Native)', 'UI/UX Design & Prototyping', 'Backend & API Development', 'App Store Optimization', 'Ongoing Maintenance & Updates'],
         },
     };
 
+    const currentService = services[activeIndex];
+    const isExpanded = expandedId === currentService.id;
+    const details = serviceDetails[currentService.id];
+
     return (
-        <section className="relative bg-black py-16 px-4">
-            <div className="flex items-center justify-center mb-10">
-                <h2 className="luxe-display text-3xl sm:text-4xl font-bold tracking-tight text-white uppercase leading-none">
+        <section ref={triggerRef} className="relative bg-black h-screen flex flex-col overflow-hidden">
+            {/* ─── Header ─── */}
+            <div className="flex items-center justify-center pt-6 pb-2 shrink-0 z-10">
+                <h2 className="luxe-display text-2xl font-bold tracking-tight text-white uppercase leading-none">
                     Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Services</span>
                 </h2>
             </div>
-            <div className="flex flex-col gap-6 max-w-sm mx-auto">
-                {services.map((service, index) => {
-                    const isExpanded = expandedId === service.id;
-                    const isActive = activeId === service.id;
-                    const details = serviceDetails[service.id];
 
-                    return (
-                        <div
-                            key={service.id}
-                            ref={el => mobileCardsRef.current[index] = el}
-                            data-service-id={service.id}
-                        >
-                            {/* ─── Small Card — original 3D design (hidden when expanded) ─── */}
-                            <div
-                                className={`transition-all duration-500 ${isExpanded ? 'opacity-0 scale-95 h-0 overflow-hidden' : 'opacity-100 scale-100'} ${isActive && !isExpanded ? 'scale-100 opacity-100' : !isExpanded ? 'scale-[0.92] opacity-40' : ''}`}
-                                style={{
-                                    width: '100%',
-                                    minHeight: isExpanded ? 0 : '280px',
-                                    willChange: 'transform',
-                                    backfaceVisibility: 'hidden'
-                                }}
-                            >
-                                <div className={`service-card-3d ${isActive ? 'active' : ''}`}>
-                                    <div className="service-logo">
-                                        <span className="circle circle1"></span>
-                                        <span className="circle circle2"></span>
-                                        <span className="circle circle3"></span>
-                                        <span className="circle circle4"></span>
-                                        <span className="circle circle5">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29.667 31.69" className="svg">
-                                                <path d="M12.827,1.628A1.561,1.561,0,0,1,14.31,0h2.964a1.561,1.561,0,0,1,1.483,1.628v11.9a9.252,9.252,0,0,1-2.432,6.852q-2.432,2.409-6.963,2.409T2.4,20.452Q0,18.094,0,13.669V1.628A1.561,1.561,0,0,1,1.483,0h2.98A1.561,1.561,0,0,1,5.947,1.628V13.191a5.635,5.635,0,0,0,.85,3.451,3.153,3.153,0,0,0,2.632,1.094,3.032,3.032,0,0,0,2.582-1.076,5.836,5.836,0,0,0,.816-3.486Z" transform="translate(0 0)"></path>
-                                                <path d="M75.207,20.857a1.561,1.561,0,0,1-1.483,1.628h-2.98a1.561,1.561,0,0,1-1.483-1.628V1.628A1.561,1.561,0,0,1,70.743,0h2.98a1.561,1.561,0,0,1,1.483,1.628Z" transform="translate(-45.91 0)"></path>
-                                                <path d="M0,80.018A1.561,1.561,0,0,1,1.483,78.39h26.7a1.561,1.561,0,0,1,1.483,1.628v2.006a1.561,1.561,0,0,1-1.483,1.628H1.483A1.561,1.561,0,0,1,0,82.025Z" transform="translate(0 -51.963)"></path>
-                                            </svg>
-                                        </span>
-                                    </div>
-                                    <div className="service-glass"></div>
-                                    <div className="service-content">
-                                        <span className="title uppercase tracking-tight text-xs sm:text-sm">{service.title}</span>
-                                    </div>
-                                    <div className="service-bottom">
-                                        <div className="mt-4 w-full">
-                                            <button
-                                                className="luxe-button luxe-button-outline w-full py-2 text-[9px] tracking-[0.2em]"
-                                                onClick={() => handleExpand(service.id)}
-                                            >
-                                                VIEW MORE
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+            {/* ─── Top 35%: shape area (particles render here via clipPath) ─── */}
+            <div className="flex-none" style={{ height: '35%' }} />
 
-                            {/* ─── Popup Card (full details) ─── */}
-                            <div
-                                className={`transition-all duration-500 origin-top ${isExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-95 h-0 overflow-hidden'}`}
-                            >
-                                <div className="relative rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-900/50 via-blue-900/30 to-black/80 backdrop-blur-xl p-6 shadow-2xl shadow-indigo-500/10">
-                                    {/* Header */}
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white">
-                                            {service.icon}
-                                        </div>
-                                        <div>
-                                            <span className="text-indigo-400 text-[10px] font-semibold tracking-wider">{service.number}</span>
-                                            <h3 className="text-base font-bold text-white uppercase tracking-tight leading-tight">{service.title}</h3>
-                                        </div>
-                                    </div>
+            {/* ─── Bottom ~60%: single card ─── */}
+            <div className="flex-1 flex flex-col items-center justify-start px-4 relative z-10">
+                {/* Card counter */}
+                <div className="text-indigo-400/60 text-[10px] font-mono tracking-widest mb-3">
+                    {String(activeIndex + 1).padStart(2, '0')} / {String(totalCards).padStart(2, '0')}
+                </div>
 
-                                    {/* Description */}
-                                    <p className="text-gray-300/90 text-xs leading-relaxed mb-5">{details.description}</p>
-
-                                    {/* Features */}
-                                    <div className="mb-5">
-                                        <h4 className="text-[10px] font-semibold text-indigo-300 uppercase tracking-wider mb-3">What We Deliver</h4>
-                                        <div className="grid grid-cols-1 gap-2">
-                                            {details.features.map((feature, i) => (
-                                                <div key={i} className="flex items-center gap-2 text-xs text-gray-300/80">
-                                                    <span className="w-1 h-1 rounded-full bg-indigo-400 shrink-0"></span>
-                                                    {feature}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Tools */}
-                                    <div className="mb-5">
-                                        <h4 className="text-[10px] font-semibold text-indigo-300 uppercase tracking-wider mb-3">Tools & Stack</h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {service.tools.map((tool, i) => (
-                                                <span key={i} className="px-3 py-1 rounded-full text-[10px] font-medium bg-white/5 border border-white/10 text-gray-300">
-                                                    {tool}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* View Less */}
-                                    <button
-                                        className="luxe-button luxe-button-primary w-full py-3 text-[10px] tracking-[0.2em]"
-                                        onClick={() => handleCollapse(service.id)}
-                                    >
-                                        VIEW LESS
-                                    </button>
-                                </div>
+                {/* ─── Small Card (original 3D UI) ─── */}
+                <div
+                    className={`transition-all duration-500 w-full max-w-xs ${isExpanded ? 'opacity-0 scale-95 h-0 overflow-hidden' : 'opacity-100 scale-100'}`}
+                    style={{ minHeight: isExpanded ? 0 : '260px', willChange: 'transform', backfaceVisibility: 'hidden' }}
+                >
+                    <div className="service-card-3d active">
+                        <div className="service-logo">
+                            <span className="circle circle1"></span>
+                            <span className="circle circle2"></span>
+                            <span className="circle circle3"></span>
+                            <span className="circle circle4"></span>
+                            <span className="circle circle5">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29.667 31.69" className="svg">
+                                    <path d="M12.827,1.628A1.561,1.561,0,0,1,14.31,0h2.964a1.561,1.561,0,0,1,1.483,1.628v11.9a9.252,9.252,0,0,1-2.432,6.852q-2.432,2.409-6.963,2.409T2.4,20.452Q0,18.094,0,13.669V1.628A1.561,1.561,0,0,1,1.483,0h2.98A1.561,1.561,0,0,1,5.947,1.628V13.191a5.635,5.635,0,0,0,.85,3.451,3.153,3.153,0,0,0,2.632,1.094,3.032,3.032,0,0,0,2.582-1.076,5.836,5.836,0,0,0,.816-3.486Z" transform="translate(0 0)"></path>
+                                    <path d="M75.207,20.857a1.561,1.561,0,0,1-1.483,1.628h-2.98a1.561,1.561,0,0,1-1.483-1.628V1.628A1.561,1.561,0,0,1,70.743,0h2.98a1.561,1.561,0,0,1,1.483,1.628Z" transform="translate(-45.91 0)"></path>
+                                    <path d="M0,80.018A1.561,1.561,0,0,1,1.483,78.39h26.7a1.561,1.561,0,0,1,1.483,1.628v2.006a1.561,1.561,0,0,1-1.483,1.628H1.483A1.561,1.561,0,0,1,0,82.025Z" transform="translate(0 -51.963)"></path>
+                                </svg>
+                            </span>
+                        </div>
+                        <div className="service-glass"></div>
+                        <div className="service-content">
+                            <span className="title uppercase tracking-tight text-xs sm:text-sm">{currentService.title}</span>
+                            <span className="text text-[10px] sm:text-xs line-clamp-2">{currentService.desc}</span>
+                        </div>
+                        <div className="service-bottom">
+                            <div className="mt-4 w-full">
+                                <button
+                                    className="luxe-button luxe-button-outline w-full py-2 text-[9px] tracking-[0.2em]"
+                                    onClick={() => handleExpand(currentService.id)}
+                                >
+                                    VIEW MORE
+                                </button>
                             </div>
                         </div>
-                    );
-                })}
+                    </div>
+                </div>
+
+                {/* ─── Expanded Popup Card ─── */}
+                <div className={`transition-all duration-500 origin-top w-full max-w-xs ${isExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-95 h-0 overflow-hidden'}`}>
+                    <div className="relative rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-900/50 via-blue-900/30 to-black/80 backdrop-blur-xl p-5 shadow-2xl shadow-indigo-500/10">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white">
+                                {currentService.icon}
+                            </div>
+                            <div>
+                                <span className="text-indigo-400 text-[9px] font-semibold tracking-wider">{currentService.number}</span>
+                                <h3 className="text-sm font-bold text-white uppercase tracking-tight leading-tight">{currentService.title}</h3>
+                            </div>
+                        </div>
+                        <p className="text-gray-300/90 text-[11px] leading-relaxed mb-4">{details.description}</p>
+                        <div className="mb-4">
+                            <h4 className="text-[9px] font-semibold text-indigo-300 uppercase tracking-wider mb-2">What We Deliver</h4>
+                            <div className="grid grid-cols-1 gap-1.5">
+                                {details.features.map((feature, i) => (
+                                    <div key={i} className="flex items-center gap-2 text-[11px] text-gray-300/80">
+                                        <span className="w-1 h-1 rounded-full bg-indigo-400 shrink-0"></span>
+                                        {feature}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="mb-4">
+                            <h4 className="text-[9px] font-semibold text-indigo-300 uppercase tracking-wider mb-2">Tools & Stack</h4>
+                            <div className="flex flex-wrap gap-1.5">
+                                {currentService.tools.map((tool, i) => (
+                                    <span key={i} className="px-2.5 py-0.5 rounded-full text-[9px] font-medium bg-white/5 border border-white/10 text-gray-300">
+                                        {tool}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        <button
+                            className="luxe-button luxe-button-primary w-full py-2.5 text-[9px] tracking-[0.2em]"
+                            onClick={() => handleCollapse(currentService.id)}
+                        >
+                            VIEW LESS
+                        </button>
+                    </div>
+                </div>
             </div>
         </section>
     );

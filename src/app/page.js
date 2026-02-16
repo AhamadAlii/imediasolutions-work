@@ -105,7 +105,11 @@ export default function Home() {
     triggers.push(ScrollTrigger.create({
       trigger: '#services-section',
       start: 'top bottom',
-      onEnter: () => setActiveService('video'),
+      onEnter: () => {
+        // Scatter particles first as we leave hero, services GSAP will set the correct shape
+        if (isMobile) setActiveService('scattered');
+        else setActiveService('video');
+      },
       onEnterBack: () => setActiveService('app'),
     }));
 
@@ -143,7 +147,7 @@ export default function Home() {
   // Shape zone is 15% to 50% -> inset(15% 0 50% 0)
   let currentClipPath = 'inset(0 0 0 0)';
   if (activeService !== 'hero') {
-    currentClipPath = isMobile ? 'inset(15% 0 50% 0)' : 'inset(10% 60% 0 0)';
+    currentClipPath = isMobile ? 'inset(8% 0 58% 0)' : 'inset(10% 60% 0 0)';
   }
 
   return (
