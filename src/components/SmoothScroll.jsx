@@ -17,11 +17,11 @@ export default function SmoothScroll({ children }) {
 
     return (
         <ReactLenis root options={{
-            lerp: 0.08, // Snappier response
-            duration: 1.2, // Balanced duration
+            lerp: 0.1, // Slightly snappier
+            duration: 1.0, // Slightly shorter
             smoothWheel: true,
             wheelMultiplier: 1.0,
-            touchMultiplier: 2.5, // Increased from 1.5 for faster swiping
+            touchMultiplier: 1.8, // Reduced from 2.5 for more controlled swipes
             infinite: false,
         }}>
             {children}

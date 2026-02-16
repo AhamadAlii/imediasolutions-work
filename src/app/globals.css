@@ -255,6 +255,8 @@ html {
 
 /* Fix mobile micro-stutter */
 .services-track {
+  display: flex;
+  height: 100%;
   will-change: transform;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;

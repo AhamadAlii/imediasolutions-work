@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import gsap from 'gsap';
 
@@ -12,16 +12,88 @@ const projects = [
     { id: '05', name: 'Feature', tags: ['App Design', 'GTM'], image: '/cases/5.jpeg' },
 ];
 
+/* ── Small sub-component for the mobile 3D inline card ─────────── */
+const MobileInlineCard = ({ project, isExpanded }) => {
+    const mobileCardRef = useRef(null);
+    const mobileTitleRef = useRef(null);
+
+    useEffect(() => {
+        if (!isExpanded || !mobileCardRef.current) return;
+
+        // Entrance: tilt in with the same 3D pop as desktop
+        gsap.fromTo(mobileCardRef.current,
+            { rotateX: 15, rotateY: -8, z: -30, opacity: 0, scale: 0.92 },
+            { rotateX: 8, rotateY: -6, z: 20, opacity: 1, scale: 1, duration: 0.6, ease: 'expo.out' }
+        );
+        if (mobileTitleRef.current) {
+            gsap.fromTo(mobileTitleRef.current,
+                { z: 0, opacity: 0 },
+                { z: 50, opacity: 1, duration: 0.6, delay: 0.1, ease: 'expo.out' }
+            );
+        }
+    }, [isExpanded]);
+
+    return (
+        <div
+            className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[350px] opacity-100 pb-8 px-4' : 'max-h-0 opacity-0'}`}
+        >
+            <div className="case-3d-container" style={{ perspective: '1000px', height: 'auto' }}>
+                <div
+                    ref={mobileCardRef}
+                    className="case-3d-card shadow-2xl"
+                    style={{ aspectRatio: '16/9', borderRadius: '16px', transformStyle: 'preserve-3d' }}
+                >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 rounded-2xl" />
+                    <Image
+                        src={project.image}
+                        alt={project.name}
+                        fill
+                        className="object-cover rounded-2xl"
+                    />
+                    <div
+                        ref={mobileTitleRef}
+                        className="absolute bottom-4 left-4 z-20 text-white font-bold text-lg tracking-tight opacity-0"
+                        style={{ transform: 'translateZ(0px)', textShadow: '0 6px 20px rgba(0,0,0,0.5)' }}
+                    >
+                        {project.name}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const CaseStudies = () => {
     const [activeProject, setActiveProject] = useState(projects[0]);
     const [isRowHovered, setIsRowHovered] = useState(false);
+    const [mobileExpandedId, setMobileExpandedId] = useState(null);
+    const [isMobile, setIsMobile] = useState(false);
     const imageRef = useRef(null);
     const cardRef = useRef(null);
     const titleOverlayRef = useRef(null);
 
-    // Swap Animation (Image Fade/Scale)
     useEffect(() => {
-        if (imageRef.current) {
+        const check = () => setIsMobile(window.innerWidth < 1024);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
+
+    const handleRowClick = useCallback((project) => {
+        if (isMobile) {
+            // Toggle: tap same row again to collapse
+            setMobileExpandedId(prev => prev === project.id ? null : project.id);
+        }
+        setActiveProject(project);
+        // For mobile, we don't use isRowHovered for the desktop effect,
+        // but setting activeProject is still useful for styling the row.
+        // For desktop, this will still trigger the hover effect.
+        setIsRowHovered(true);
+    }, [isMobile]);
+
+    // Desktop: Swap Animation (Image Fade/Scale)
+    useEffect(() => {
+        if (!isMobile && imageRef.current) {
             gsap.fromTo(imageRef.current,
                 { opacity: 0, scale: 1.1, y: 15 },
                 { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: 'power2.out' }
@@ -29,7 +101,7 @@ const CaseStudies = () => {
         }
 
         // Re-trigger 3D Tilt and Pop-out on Project Change (if hovered)
-        if (isRowHovered && cardRef.current && titleOverlayRef.current) {
+        if (!isMobile && isRowHovered && cardRef.current && titleOverlayRef.current) {
             gsap.to(cardRef.current, {
                 rotateX: 10,
                 rotateY: -10,
@@ -44,11 +116,11 @@ const CaseStudies = () => {
                 ease: 'expo.out'
             });
         }
-    }, [activeProject, isRowHovered]);
+    }, [activeProject, isRowHovered, isMobile]);
 
-    // Reset when not hovering anymore
+    // Desktop: Reset when not hovering anymore
     useEffect(() => {
-        if (!isRowHovered && cardRef.current && titleOverlayRef.current) {
+        if (!isMobile && !isRowHovered && cardRef.current && titleOverlayRef.current) {
             gsap.to(cardRef.current, {
                 rotateX: 0,
                 rotateY: 0,
@@ -63,7 +135,7 @@ const CaseStudies = () => {
                 ease: 'power2.inOut'
             });
         }
-    }, [isRowHovered]);
+    }, [isRowHovered, isMobile]);
 
     return (
         <section className="bg-black py-32 px-12 md:px-24 overflow-hidden">
@@ -79,20 +151,21 @@ const CaseStudies = () => {
                     {/* PROJECTS TABLE */}
                     <div
                         className="flex flex-col border-t border-white/5"
-                        onMouseLeave={() => setIsRowHovered(false)}
+                        onMouseLeave={() => !isMobile && setIsRowHovered(false)} // Only reset hover state on desktop
                     >
                         {projects.map((project) => {
                             const isActive = activeProject.id === project.id;
+                            const isMobileExpanded = mobileExpandedId === project.id;
                             return (
                                 <div
                                     key={project.id}
-                                    onClick={() => {
-                                        setActiveProject(project);
-                                        setIsRowHovered(true);
-                                    }}
+                                    onClick={() => handleRowClick(project)}
                                     onMouseEnter={() => {
-                                        setActiveProject(project);
-                                        setIsRowHovered(true);
+                                        // Only trigger hover effect on desktop
+                                        if (!isMobile) {
+                                            setActiveProject(project);
+                                            setIsRowHovered(true);
+                                        }
                                     }}
                                     className={`group flex flex-col border-b border-white/5 transition-all duration-300 cursor-pointer ${isActive ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'}`}
                                 >
@@ -115,42 +188,33 @@ const CaseStudies = () => {
                                         </div>
                                     </div>
 
-                                    {/* MOBILE INLINE IMAGE PREVIEW */}
-                                    <div
-                                        className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${isActive ? 'max-h-[300px] opacity-100 pb-8 px-4' : 'max-h-0 opacity-0'}`}
-                                    >
-                                        <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden border border-white/10">
-                                            <Image
-                                                src={project.image}
-                                                alt={project.name}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                    </div>
+                                    {/* MOBILE INLINE 3D IMAGE PREVIEW — directly below this row */}
+                                    <MobileInlineCard project={project} isExpanded={isMobileExpanded} />
                                 </div>
                             );
                         })}
                     </div>
 
-                    {/* PROJECT PREVIEW - 3D CARD (HIDDEN ON MOBILE) */}
-                    <div className="case-3d-container aspect-[4/3] w-full hidden lg:block">
-                        <div ref={cardRef} className="case-3d-card shadow-2xl">
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
-                            <div ref={imageRef} className="w-full h-full">
-                                <Image
-                                    src={activeProject.image}
-                                    alt={activeProject.name}
-                                    fill
-                                    className="object-cover"
-                                    priority
-                                />
-                            </div>
-                            <div ref={titleOverlayRef} className="card_title_overlay z-20">
-                                {activeProject.name}
+                    {/* PROJECT PREVIEW - 3D CARD (DESKTOP ONLY) */}
+                    {!isMobile && (
+                        <div className="case-3d-container aspect-[4/3] w-full">
+                            <div ref={cardRef} className="case-3d-card shadow-2xl">
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
+                                <div ref={imageRef} className="w-full h-full">
+                                    <Image
+                                        src={activeProject.image}
+                                        alt={activeProject.name}
+                                        fill
+                                        className="object-cover"
+                                        priority
+                                    />
+                                </div>
+                                <div ref={titleOverlayRef} className="card_title_overlay z-20">
+                                    {activeProject.name}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </section>

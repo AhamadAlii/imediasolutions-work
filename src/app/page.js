@@ -61,49 +61,47 @@ export default function Home() {
     const animations = [];
     const triggers = [];
 
-    // 1. Hero Content Fade & Scale
+    // 1. Hero Content & Particle Transition
+    const heroTrigger = {
+      trigger: '#services-trigger',
+      start: 'top bottom',
+      end: 'top center',
+      scrub: true,
+      onEnter: () => setHeroHidden(false),
+      onLeave: () => setHeroHidden(true),
+      onEnterBack: () => {
+        setHeroHidden(false);
+        setActiveService('hero');
+        particleShiftRef.current.x = 0;
+      },
+      onLeaveBack: () => {
+        setHeroHidden(false);
+        setActiveService('hero');
+        particleShiftRef.current.x = 0;
+      }
+    };
+
     animations.push(gsap.to(heroContentRef.current, {
       opacity: 0,
       y: -150,
       scale: 0.9,
-      ease: 'power2.inOut',
-      scrollTrigger: {
-        trigger: '#services-trigger',
-        start: 'top bottom',
-        end: 'top center',
-        scrub: true,
-        onEnter: () => setHeroHidden(false),
-        onLeave: () => setHeroHidden(true),
-        onEnterBack: () => {
-          setHeroHidden(false);
-          setActiveService('hero');
-        },
-      }
+      ease: 'none',
+      scrollTrigger: heroTrigger
     }));
 
-    // 2. Particle Shift Animation (Move to left stage as we approach Services)
+    // 2. Particle Shift Animation
     animations.push(gsap.to(particleShiftRef.current, {
       x: 1,
-      ease: 'power2.inOut',
+      ease: 'none',
       scrollTrigger: {
         trigger: '#services-trigger',
         start: 'top bottom',
         end: 'bottom bottom',
-        scrub: 1,
+        scrub: true,
       }
     }));
 
-    // 3. Hero Reset Logic
-    triggers.push(ScrollTrigger.create({
-      trigger: '#services-trigger',
-      start: 'top 20%',
-      onEnterBack: () => {
-        setActiveService('hero');
-        particleShiftRef.current.x = 0;
-      },
-    }));
-
-    // 4. Robust Section Top Fallback
+    // 3. Section Navigation Logic
     triggers.push(ScrollTrigger.create({
       trigger: '#services-section',
       start: 'top bottom',
@@ -111,7 +109,7 @@ export default function Home() {
       onEnterBack: () => setActiveService('video'),
     }));
 
-    // 4b. Hide navbar only while services section is in view.
+    // 4. Hide navbar during services
     triggers.push(ScrollTrigger.create({
       trigger: '#services-section',
       start: 'top top',
@@ -122,12 +120,13 @@ export default function Home() {
       onLeaveBack: () => setHideNavbar(false),
     }));
 
-    // 5. Global Top Reset
+    // 5. Global Top Reset (Fallback)
     triggers.push(ScrollTrigger.create({
       trigger: 'body',
       start: 'top top',
       onEnterBack: () => {
         setActiveService('hero');
+        setHeroHidden(false);
         particleShiftRef.current.x = 0;
       }
     }));
@@ -142,7 +141,7 @@ export default function Home() {
   // Desktop: Top 10% is header. Left 40% starts at 10% height -> inset(10% 60% 0 0)
   // Mobile/Tab: 0-15% title, 15-50% shape, 50-100% cards.
   // Shape zone is 15% to 50% -> inset(15% 0 50% 0)
-  let currentClipPath = 'inset(0 0 0 0)';
+  let currentClipPath = 'none';
   if (activeService !== 'hero') {
     currentClipPath = isMobile ? 'inset(15% 0 50% 0)' : 'inset(10% 60% 0 0)';
   }
@@ -152,7 +151,7 @@ export default function Home() {
       <Navbar hidden={hideNavbar} />
 
       <div
-        className={`fixed inset-0 pointer-events-none transition-all duration-700 ${activeService === 'hero' ? 'z-10' : 'z-[110]'}`}
+        className={`fixed inset-0 pointer-events-none transition-all duration-700 ${activeService === 'hero' ? 'z-[70]' : 'z-[110]'}`}
         style={{
           clipPath: currentClipPath
         }}
@@ -165,41 +164,39 @@ export default function Home() {
         ref={heroRef}
         className={`relative z-[60] flex min-h-screen items-center px-6 pt-20 transition-all duration-1000 ease-in-out ${heroHidden ? 'pointer-events-none opacity-0 invisible' : 'opacity-100'}`}
       >
-        <div ref={heroContentRef} className="w-full max-w-7xl mx-auto">
-          <div className="max-w-[640px]">
-            <h1
-              className="luxe-display mb-8 mt-6 md:mt-16 font-semibold tracking-tight text-white leading-[1.1] md:leading-[0.92]"
-              style={{ textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
-            >
-              <span className="flex flex-col md:block">
-                <span className="text-[48px] sm:text-7xl md:text-8xl lg:text-9xl hero-eye-word">EYE</span>{' '}
-                <span className="text-[48px] sm:text-7xl md:text-8xl lg:text-9xl hero-media-word text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500 italic">MEDIA</span>
-              </span>
-            </h1>
+        <div ref={heroContentRef} className="max-w-[640px]">
+          <h1
+            className="luxe-display mb-8 mt-6 md:mt-16 font-semibold tracking-tight text-white leading-[1.1] md:leading-[0.92]"
+            style={{ textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+          >
+            <span className="flex flex-col md:block">
+              <span className="text-[48px] sm:text-7xl md:text-8xl lg:text-9xl hero-eye-word">EYE</span>{' '}
+              <span className="text-[48px] sm:text-7xl md:text-8xl lg:text-9xl hero-media-word text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-500 italic">MEDIA</span>
+            </span>
+          </h1>
 
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/25 bg-indigo-500/12 text-indigo-200 text-[9px] sm:text-[10px] font-medium tracking-[0.18em] uppercase mb-8">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-              </span>
-              Innovation Driven Studio
-            </div>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/25 bg-indigo-500/12 text-indigo-200 text-[9px] sm:text-[10px] font-medium tracking-[0.18em] uppercase mb-8">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            </span>
+            Innovation Driven Studio
+          </div>
 
-            <p
-              className="max-w-[620px] text-gray-200/95 text-base sm:text-lg md:text-xl font-normal mb-10 md:mb-12 leading-relaxed"
-              style={{ textShadow: '0 4px 20px rgba(0,0,0,0.6)' }}
-            >
-              Eyemedia crafts high-fidelity digital experiences that bridge the gap between imagination and execution.
-            </p>
+          <p
+            className="max-w-[620px] text-gray-200/95 text-base sm:text-lg md:text-xl font-normal mb-10 md:mb-12 leading-relaxed"
+            style={{ textShadow: '0 4px 20px rgba(0,0,0,0.6)' }}
+          >
+            Eyemedia crafts high-fidelity digital experiences that bridge the gap between imagination and execution.
+          </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start">
-              <button className="luxe-button luxe-button-primary py-4 md:py-5 px-8 md:px-10 text-[10px] md:text-[11px]">
-                START A PROJECT
-              </button>
-              <button className="luxe-button luxe-button-outline py-4 md:py-5 px-8 md:px-10 text-[10px] md:text-[11px]">
-                OUR SERVICES
-              </button>
-            </div>
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start">
+            <button className="luxe-button luxe-button-primary py-4 md:py-5 px-8 md:px-10 text-[10px] md:text-[11px]">
+              START A PROJECT
+            </button>
+            <button className="luxe-button luxe-button-outline py-4 md:py-5 px-8 md:px-10 text-[10px] md:text-[11px]">
+              OUR SERVICES
+            </button>
           </div>
         </div>
       </section>

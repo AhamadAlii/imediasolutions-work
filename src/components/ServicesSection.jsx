@@ -78,10 +78,6 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
     const triggerRef = useRef(null);
     const cardsRef = useRef([]);
     const lastActiveRef = useRef(activeId);
-
-    // Dynamic values for responsiveness
-    // On Desktop: Shape is left 40%, Cards are right 60%
-    // On Mobile/Tab: Shape is top 40%, Cards are bottom 60%
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -104,26 +100,22 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                     const cards = cardsRef.current;
                     if (!track || !cards[0]) return 0;
                     const lastCard = cards[cards.length - 1];
-                    // Calculate the total horizontal distance between first and last card
                     return -(lastCard.offsetLeft - cards[0].offsetLeft);
                 },
-                ease: 'none',
+                ease: 'none', // 🔑 removes lag
                 scrollTrigger: {
                     trigger: triggerEl,
                     start: 'top top',
-                    end: () => `+=${window.innerHeight * (totalCards - 1) * (isMobile ? 0.8 : 1.1)}`,
-                    scrub: isMobile ? 0.6 : 1.2, // Smoother interpolation (seconds of lag)
+                    end: () => `+=${window.innerHeight * (totalCards - 1) * 0.75}`,
+                    scrub: true, // 🔑 1:1 mapping
                     pin: true,
                     anticipatePin: 1,
                     invalidateOnRefresh: true,
-                    snap: {
-                        snapTo: 1 / (totalCards - 1),
-                        duration: { min: 0.4, max: 0.9 }, // Slightly slower snapping
-                        delay: 0.05, // Tiny delay before snap kicks in
-                        ease: 'power2.out', // Smoother arrival
-                    },
+                    fastScrollEnd: true,
+                    preventOverlapping: true,
                     onUpdate: (self) => {
-                        const index = Math.min(Math.round(self.progress * (totalCards - 1)), totalCards - 1);
+                        const rawIndex = self.progress * (totalCards - 1);
+                        const index = Math.min(Math.round(rawIndex), totalCards - 1);
                         const currentId = services[index].id;
                         if (currentId !== lastActiveRef.current) {
                             lastActiveRef.current = currentId;
@@ -131,7 +123,7 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                         }
                     },
                     onEnter: () => onServiceChange(services[0].id),
-                    onLeaveBack: () => onServiceChange(services[0].id),
+                    onLeaveBack: () => onServiceChange('hero'),
                 },
             });
         }, triggerRef);
@@ -139,16 +131,13 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
         return () => ctx.revert();
     }, [onServiceChange, isMobile]);
 
-    // Layout Constants
     const leftPaneWidth = isMobile ? '100%' : '40vw';
     const horizontalGutter = isMobile ? '2rem' : 'clamp(1rem, 5vw, 2.5rem)';
 
     return (
         <section ref={triggerRef} className="relative bg-black overflow-hidden h-screen flex flex-col">
-
-            {/* TOP HEADER ZONE (Full Width on Desktop, 15% on Mobile) */}
             <div
-                className={`relative z-[110] flex items-center justify-center border-b border-white/5 bg-black transition-all duration-700`}
+                className="relative z-[110] flex items-center justify-center border-b border-white/5 bg-black transition-all duration-700"
                 style={{ height: isMobile ? '15vh' : '10vh' }}
             >
                 <div className="flex flex-col items-center">
@@ -159,15 +148,12 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
             </div>
 
             <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} flex-1 relative overflow-hidden`}>
-
-                {/* SHAPE ZONE (40% Width on Desktop, 35% Height on Mobile) */}
                 <div
                     className={`relative z-[100] border-white/5 ${isMobile ? 'h-[35vh] w-full border-b bg-transparent shadow-none' : 'h-full border-r bg-black shadow-[30px_0_120px_rgba(0,0,0,1)]'}`}
                     style={{
                         width: isMobile ? '100%' : leftPaneWidth,
                     }}
                 >
-                    {/* The 3D Shape from page.js will be rendered via dynamic mask logic behind this zone */}
                     {!isMobile && (
                         <div className="absolute inset-0 flex items-center justify-center p-8 pointer-events-none opacity-20">
                             <h2 className="luxe-display text-8xl font-black text-white/5 rotate-[-90deg] whitespace-nowrap">CREATIVE</h2>
@@ -175,25 +161,19 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                     )}
                 </div>
 
-                {/* CARDS ZONE (60% Weight on Desktop, 50% Height on Mobile) */}
                 <div className={`relative flex items-center overflow-hidden ${isMobile ? 'h-[50vh] w-full' : 'h-full flex-1'}`}>
-
-                    {/* FIXED BACKGROUND TEXT (only on desktop) */}
                     {!isMobile && (
-                        <div
-                            className="absolute top-[5vh] z-[10] flex justify-center items-center w-full opacity-5 pointer-events-none"
-                        >
+                        <div className="absolute top-[5vh] z-[10] flex justify-center items-center w-full opacity-5 pointer-events-none">
                             <h2 className="luxe-display text-[15vw] font-bold tracking-tighter text-white uppercase italic whitespace-nowrap">IMEDIA SOLUTIONS</h2>
                         </div>
                     )}
 
-                    {/* THE TRACK */}
                     <div
                         ref={sectionRef}
                         className="flex flex-nowrap h-full items-center z-[70] services-track"
                         style={{
                             paddingLeft: horizontalGutter,
-                            paddingRight: '60vw', // Room for last card
+                            paddingRight: '60vw',
                             willChange: 'transform'
                         }}
                     >
@@ -231,7 +211,7 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                                             <span className="text text-[10px] sm:text-xs line-clamp-2">{service.desc}</span>
                                         </div>
                                         <div className="service-bottom">
-                                            <div className="mt-4">
+                                            <div className="mt-4 w-full">
                                                 <button className="luxe-button luxe-button-outline w-full py-2 text-[9px] tracking-[0.2em]">
                                                     VIEW MORE
                                                 </button>

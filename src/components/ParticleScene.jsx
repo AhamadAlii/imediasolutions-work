@@ -382,7 +382,7 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
                 const targetY = viewport.height * 0.175;
                 meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
             } else {
-                const heroBiasX = activeService === 'hero' ? viewport.width * 0.24 : 0;
+                const heroBiasX = activeService === 'hero' ? viewport.width * 0.32 : 0;
                 const shiftX = activeService === 'hero' ? 0.3 : 0.3;
                 const targetX = heroBiasX - viewport.width * shiftX * shiftAmount;
                 meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
@@ -528,7 +528,7 @@ const ParticleScene = ({ activeService, particleShift, isMobile }) => {
             <Canvas
                 camera={{ position: [0, 0, 4], fov: 75 }}
                 gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
-                dpr={isMobile ? [1, 1.3] : [1, 1.5]}
+                dpr={[1, 1.4]}
                 frameloop="demand"
             >
                 <CameraRig />
