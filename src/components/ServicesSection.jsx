@@ -74,7 +74,7 @@ const services = [
 ];
 
 /* ─── Shared card UI ─── */
-const ServiceCard = React.forwardRef(({ service, isActive, isMobile }, ref) => (
+const ServiceCard = React.forwardRef(({ service, isActive, isMobile, onViewMore }, ref) => (
     <div
         ref={ref}
         className={`service-parent shrink-0 transition-all duration-500 ${isMobile
@@ -109,7 +109,10 @@ const ServiceCard = React.forwardRef(({ service, isActive, isMobile }, ref) => (
             </div>
             <div className="service-bottom">
                 <div className="mt-4 w-full">
-                    <button className="luxe-button luxe-button-outline w-full py-2 text-[9px] tracking-[0.2em]">
+                    <button
+                        className="luxe-button luxe-button-outline w-full py-2 text-[9px] tracking-[0.2em]"
+                        onClick={onViewMore ? () => onViewMore(service.id) : undefined}
+                    >
                         VIEW MORE
                     </button>
                 </div>
@@ -228,6 +231,7 @@ const MobileServices = ({ onServiceChange, activeId }) => {
                                 service={service}
                                 isActive={activeId === service.id}
                                 isMobile={true}
+                                onViewMore={(id) => window.location.href = `/services/${id}`}
                             />
                         ))}
                     </div>

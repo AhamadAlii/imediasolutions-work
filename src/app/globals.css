@@ -161,6 +161,12 @@ html {
   flex-direction: column;
 }
 
+@media (max-width: 1023px) {
+  .service-content {
+    padding: 20px 24px 0px 24px;
+  }
+}
+
 .service-content .title {
   display: block;
   color: #ffffff;
