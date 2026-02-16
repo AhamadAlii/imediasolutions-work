@@ -56,22 +56,27 @@ const Navbar = ({ hidden = false }) => {
                 </div>
             </div>
 
-            {/* Mobile Menu Overlay */}
-            <div className={`fixed inset-0 bg-black/95 backdrop-blur-2xl transition-all duration-500 ease-luxe ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                <div className="flex flex-col items-center justify-center h-full gap-8">
+            {/* Mobile Menu — Slide-down Panel */}
+            <div
+                className={`md:hidden absolute top-full left-4 right-4 rounded-2xl border border-white/10 bg-black/90 backdrop-blur-2xl shadow-2xl shadow-black/50 transition-all duration-400 ease-out z-[220] overflow-hidden ${isMenuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'}`}
+            >
+                <div className="flex flex-col py-3">
                     {navLinks.map((link, i) => (
                         <a
                             key={link.name}
                             href={link.href}
-                            className={`text-3xl font-bold tracking-tighter hover:text-blue-500 transition-all duration-500 ${isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
-                            style={{ transitionDelay: `${i * 50}ms` }}
+                            className={`px-6 py-3.5 text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 transition-all duration-300 ${i < navLinks.length - 1 ? 'border-b border-white/5' : ''} ${isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                            style={{ transitionDelay: isMenuOpen ? `${i * 40}ms` : '0ms' }}
                             onClick={() => setIsMenuOpen(false)}
                         >
                             {link.name}
                         </a>
                     ))}
-                    <div className={`mt-8 ${isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`} style={{ transitionDelay: '300ms' }}>
-                        <button className="luxe-button luxe-button-primary px-12 py-5" onClick={() => setIsMenuOpen(false)}>
+                    <div
+                        className={`px-6 pt-3 pb-1 ${isMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                        style={{ transitionDelay: isMenuOpen ? '200ms' : '0ms' }}
+                    >
+                        <button className="luxe-button luxe-button-primary w-full py-3 text-xs" onClick={() => setIsMenuOpen(false)}>
                             LET'S TALK
                         </button>
                     </div>

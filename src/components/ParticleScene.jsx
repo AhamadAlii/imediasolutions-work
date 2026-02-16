@@ -397,7 +397,7 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
                 const targetY = viewport.height * 0.175;
                 meshRef.current.position.y = THREE.MathUtils.lerp(meshRef.current.position.y, targetY, 0.1);
             } else {
-                const heroBiasX = activeService === 'hero' ? viewport.width * 0.32 : 0;
+                const heroBiasX = (activeService === 'hero' && !isMobile) ? viewport.width * 0.32 : 0;
                 const shiftX = activeService === 'hero' ? 0.3 : 0.3;
                 const targetX = heroBiasX - viewport.width * shiftX * shiftAmount;
                 meshRef.current.position.x = THREE.MathUtils.lerp(meshRef.current.position.x, targetX, 0.1);
@@ -412,9 +412,10 @@ const Particles = ({ activeService, particleShiftRef, particleCount, perfTier, i
 
             const oldScaleX = meshRef.current.scale.x;
             if (activeService === 'hero') {
-                const pulse = 1 + Math.sin(clock.getElapsedTime() * 1.2) * 0.018;
+                const baseScale = isMobile ? 0.55 : 1;
+                const pulse = baseScale * (1 + Math.sin(clock.getElapsedTime() * 1.2) * 0.018);
                 meshRef.current.scale.x = THREE.MathUtils.lerp(meshRef.current.scale.x, pulse, 0.08);
-                meshRef.current.scale.y = THREE.MathUtils.lerp(meshRef.current.scale.y, 1 / pulse, 0.08);
+                meshRef.current.scale.y = THREE.MathUtils.lerp(meshRef.current.scale.y, baseScale / pulse * baseScale, 0.08);
                 meshRef.current.rotation.z = THREE.MathUtils.lerp(
                     meshRef.current.rotation.z,
                     Math.sin(clock.getElapsedTime() * 0.65) * 0.02,
