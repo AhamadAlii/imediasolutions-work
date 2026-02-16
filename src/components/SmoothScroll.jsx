@@ -21,7 +21,7 @@ export default function SmoothScroll({ children }) {
             duration: 1.2, // Balanced duration
             smoothWheel: true,
             wheelMultiplier: 1.0,
-            touchMultiplier: 1.5,
+            touchMultiplier: 2.5, // Increased from 1.5 for faster swiping
             infinite: false,
         }}>
             {children}

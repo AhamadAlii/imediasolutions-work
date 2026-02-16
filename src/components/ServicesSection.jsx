@@ -111,8 +111,8 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                 scrollTrigger: {
                     trigger: triggerEl,
                     start: 'top top',
-                    end: () => `+=${window.innerHeight * (totalCards - 1) * (isMobile ? 1.5 : 1.25)}`,
-                    scrub: 1.5, // Increased significantly for "one-by-one" feel
+                    end: () => `+=${window.innerHeight * (totalCards - 1) * (isMobile ? 0.8 : 1.1)}`,
+                    scrub: isMobile ? 0.5 : 1.0, // More responsive on mobile, while still silky
                     pin: true,
                     anticipatePin: 1,
                     invalidateOnRefresh: true,
