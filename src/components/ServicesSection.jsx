@@ -111,11 +111,17 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
                 scrollTrigger: {
                     trigger: triggerEl,
                     start: 'top top',
-                    end: () => `+=${window.innerHeight * (totalCards - 1) * 1.25}`,
-                    scrub: 0.35,
+                    end: () => `+=${window.innerHeight * (totalCards - 1) * (isMobile ? 1.5 : 1.25)}`,
+                    scrub: isMobile ? 0.6 : 0.35,
                     pin: true,
                     anticipatePin: 1,
                     invalidateOnRefresh: true,
+                    snap: {
+                        snapTo: 1 / (totalCards - 1),
+                        duration: { min: 0.2, max: 0.5 },
+                        delay: 0,
+                        ease: 'power2.inOut',
+                    },
                     onUpdate: (self) => {
                         const index = Math.min(Math.round(self.progress * (totalCards - 1)), totalCards - 1);
                         const currentId = services[index].id;
@@ -143,17 +149,16 @@ const ServicesSection = ({ onServiceChange, activeId }) => {
         <section ref={triggerRef} className="relative bg-black overflow-hidden">
             <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} h-screen w-full relative`}>
 
-                {/* 3D SHAPE ZONE (40% Weight) */}
                 <div
-                    className={`relative z-[100] bg-black border-white/5 shadow-[30px_0_120px_rgba(0,0,0,1)] ${isMobile ? 'h-[40vh] w-full border-b' : 'h-full border-r'}`}
+                    className={`relative z-[100] border-white/5 ${isMobile ? 'h-[40vh] w-full border-b bg-transparent' : 'h-full border-r bg-black shadow-[30px_0_120px_rgba(0,0,0,1)]'}`}
                     style={{
                         width: isMobile ? '100%' : leftPaneWidth,
                         height: isMobile ? topPaneHeight : '100%'
                     }}
                 >
-                    {/* The 3D Shape from page.js will be rendered via dynamic mask logic */}
-                    <div className="absolute inset-0 flex items-center justify-center p-8">
-                        <div className="w-full h-full rounded-3xl bg-indigo-500/5 border border-white/5 backdrop-blur-3xl flex flex-col items-center justify-center text-center">
+                    {/* The 3D Shape from page.js will be rendered via dynamic mask logic behind this transparent zone */}
+                    <div className="absolute inset-0 flex items-center justify-center p-8 pointer-events-none">
+                        <div className={`w-full h-full rounded-3xl border border-white/5 flex flex-col items-center justify-center text-center ${isMobile ? 'bg-indigo-500/[0.02] backdrop-blur-[2px]' : 'bg-indigo-500/5 backdrop-blur-3xl'}`}>
                             <h2 className="luxe-display text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white uppercase px-4">
                                 Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Services</span>
                             </h2>
